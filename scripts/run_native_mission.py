@@ -70,6 +70,10 @@ def main():
     env={**os.environ,'SKYFORGE_HTTP_PORT':'8768','SKYFORGE_RADIO_PORT':'8767',
          'SKYFORGE_RADIO_KEY':str(radio),'PYTHONUNBUFFERED':'1'}
     children=[];handles=[];running=True
+    stop_request=folder/'stop-request.txt'
+    def stop_requested():
+        try:return stop_request.read_text(encoding='ascii').strip()==str(os.getpid())
+        except (OSError,UnicodeError):return False
     def stop(*_):
         nonlocal running
         running=False
@@ -85,6 +89,9 @@ def main():
         mission=launch('mission',['-m','skyforge.airsim_mission',str(config_path)])
         print('Native mission running. Station http://127.0.0.1:8768',flush=True)
         while running and mission.poll() is None:
+            if stop_requested():
+                print('Stop requested; closing flight agents and landing before shutdown.',flush=True)
+                running=False;break
             failed=[child.pid for child in children[:-1] if child.poll() is not None]
             if failed:raise RuntimeError(f'Native child exited: {failed}; inspect {folder}')
             time.sleep(.25)
@@ -102,7 +109,9 @@ def main():
             print('Independent audit:',json.dumps(report),flush=True)
             if not args.exit_on_complete:
                 print('Mission ended; station remains open for review. Ctrl+C closes owned services.',flush=True)
-                while running and station.poll() is None:time.sleep(.25)
+                while running and station.poll() is None:
+                    if stop_requested():running=False;break
+                    time.sleep(.25)
     finally:
         # Owned services only; never terminate the visible Unreal simulator.
         for child in reversed(children):
@@ -119,7 +128,7 @@ def main():
             if recovery.commands.call('isApiControlEnabled','SKYFORGE'):
                 for _ in range(180):
                     pose=recovery.state()
-                    if abs(pose['p'][2]-base[2])<.18 and np.linalg.norm(pose['v'])<.18:
+                    if pose['landed_state']==0 and np.linalg.norm(pose['v'])<.18:
                         recovery.commands.call('armDisarm',False,'SKYFORGE');break
                     recovery.commands.call('moveByVelocity',0.,0.,.5,.2,0,
                         {'is_rate':True,'yaw_or_rate':0.},'SKYFORGE')

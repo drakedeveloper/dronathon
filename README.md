@@ -12,6 +12,10 @@ a separate classical reflex, authenticated radio and a live tactical station.
 **Start here:** double-click **START-DEMO.bat**, then open
 **http://127.0.0.1:8768**. Keep the terminal open. Use **START-SKYFORGE.bat**
 for the performance profile without the extra observer camera.
+Use **START-VISIBLE-DEMO.bat** to open the separate AirSim window and follow
+the aircraft, alongside the dashboard. **STOP-SKYFORGE.bat** requests a controlled
+landing, waits for confirmed touchdown, then closes the owned simulator and services.
+Keep the stop window open until it finishes. The visible renderer adds GPU load.
 
 The editable presentation and videos are under `deliverables/`:
 `SKYFORGE-PITCH-EDGE.pptx`, `SKYFORGE-full-mission.mp4` and
