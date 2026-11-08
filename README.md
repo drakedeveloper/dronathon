@@ -14,10 +14,14 @@ a separate classical reflex, authenticated radio and a live tactical station.
 for the performance profile without the extra observer camera.
 
 The editable presentation and videos are under `deliverables/`:
-`SKYFORGE-FINAL-10min.pptx`, `SKYFORGE-full-mission.mp4` and
+`SKYFORGE-PITCH-FINAL.pptx`, `SKYFORGE-full-mission.mp4` and
 `SKYFORGE-pitch-edited.mp4`. The main deck is timed for ten minutes, including
-its 90-second video; three additional slides are backup. Click the embedded
-video on slide 10. Speaker notes contain explanations and source references.
+six flight chapters totalling 90 seconds and a 32.5-second objective/radio
+controls demonstration. Click each video in slideshow mode. Two additional
+slides are backup. All presentation
+phase labels are English. Speaker notes contain explanations and sources.
+The mechanical-design slide shows the Holybro X500 V2 product reference,
+credited to Holybro, alongside our separate simulation mass and CG assumptions.
 
 | Acceptance gate | Recorded result |
 |---|---|

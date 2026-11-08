@@ -74,6 +74,16 @@ def table(s,rows,x=.8,y=1.65,w=11.75,h=4.7,widths=None,size=20):
     return t
 
 
+
+
+def video_chapter(index):
+    item=json.loads((OUT/'video-chapters.json').read_text())['chapters'][index]
+    v=slide('Flight recording / '+item['title'],item['duration_s'],
+        'Play this embedded chapter, then continue the explanation. Actual recorded AirSim imagery, edited at 1.87x. The English caption maps the original mission phase to its display label. The chapters follow the recorded flight chronologically. Camera cuts preserve the real aircraft motion and detector output.')
+    poster=ROOT/'artifacts'/(Path(item['file']).stem+'-poster.jpg')
+    v.shapes.add_movie(str(OUT/item['file']),Inches(2.16),Inches(1.4),Inches(9.0),Inches(5.0625),poster_frame_image=str(poster),mime_type='video/mp4')
+    text(v,'Actual simulation footage / 1.87x replay / click video to play',.85,6.55,11.5,.35,15,MUTED)
+
 s=slide('SKYFORGE',15,'Open with the mission: autonomous humanitarian reconnaissance and medical support. The objective is to detect hazards, support casualties and return safely.')
 picture(s,ROOT/'station/dist/assets/site-aerial.jpg',6.6,0,6.75,7.5)
 text(s,'SKYFORGE',.75,2.0,6,1,50,bold=True)
@@ -86,7 +96,7 @@ s=slide('The mission',30,'Describe the humanitarian scenario. Mines and weapons 
 bullets(s,['Explore the coastal environment and map hazards.','Locate casualties and prioritize feasible aid.','Continue through radio loss and return with reserve.'])
 picture(s,ROOT/'artifacts/tactical-map-mission.png',6.8,1.55,5.8,4.9)
 
-s=slide('Two agents. Independent flight protection.',55,'Follow the editable diagram from sensors to control. Exactly two deterministic LangGraph nodes: PerceptionAgent and PlannerAgent. No language model runs in the control loop. The radio module is asynchronous and is not a third agent.')
+s=slide('Two agents. Independent flight protection.',40,'Follow the editable diagram from sensors to control. Exactly two deterministic LangGraph nodes: PerceptionAgent and PlannerAgent. No language model runs in the control loop. The radio module is asynchronous and is not a third agent.')
 labels=['RGB + depth','Two detectors','Perception\nAgent','Planner\nAgent','Route shield']
 for i,label in enumerate(labels):
     x=.65+i*2.55;box(s,label,x,1.9,2.05,.9,'22515B' if 'Agent' in label else '243847')
@@ -97,8 +107,8 @@ text(s,'bounded velocity commands',6.0,4.1,3.8,.4,16,MUTED)
 box(s,'Journal + radio',6.0,5.55,2.5);box(s,'Ground station',9.1,5.55,2.5);arrow(s,8.55,5.97,9.05,5.97)
 text(s,'CRC/HMAC  •  buffered replay',.8,5.6,4.7,.7,20,ORANGE)
 
-s=slide('INIT → autonomous mission',30,'Initialization checks stationary launch, odometry, sensors, model availability and energy. Show the mission state sequence. Priority interrupts handle low energy, radio loss and revised station objectives.')
-names=['INIT','EXPLORER','DÉTECTER','TRIAGE','POSÉ','RETOUR BASE','LIVRER','NAVIGUER']
+s=slide('Initialize / autonomous mission',30,'Initialization checks stationary launch, odometry, sensors, model availability and energy. Show the mission state sequence. Priority interrupts handle low energy, radio loss and revised station objectives.')
+names=['INITIALIZE','EXPLORE','DETECT','TRIAGE','LANDED','RETURN TO BASE','DELIVER','NAVIGATE']
 for i,name in enumerate(names):
     col=i%4;row=i//4;x=.8+col*3.1;y=1.9+row*2.1;box(s,name,x,y,2.4,1)
 for i in range(3):arrow(s,3.25+i*3.1,2.4,3.85+i*3.1,2.4)
@@ -106,18 +116,30 @@ arrow(s,11.3,2.95,11.3,3.95)
 for i in range(3):arrow(s,10.05-i*3.1,4.5,9.4-i*3.1,4.5)
 text(s,'Priority interrupts: energy reserve • link loss • authenticated goal update',.85,5.8,11.7,.8,23,ORANGE)
 
-s=slide('DÉTECTER / from pixels to mapped objects',55,'Explain the five classes and two models. RGB letterbox preprocessing, class-wise NMS, depth and aligned pose produce ENU positions. Persistent tracks and role votes reduce unstable classifications. The displayed image is a real recorded simulator frame.')
+video_chapter(0)
+video_chapter(1)
+
+s=slide('Detect / from pixels to mapped objects',45,'Explain the five classes and two models. RGB letterbox preprocessing, class-wise NMS, depth and aligned pose produce ENU positions. Persistent tracks and role votes reduce unstable classifications. The displayed image is a real recorded simulator frame.')
 frames=list((ROOT/'artifacts/demo-recording').glob('camera-*.jpg')); example=min(frames,key=lambda p:abs(int(p.stem.split('-')[-1])-160)) if frames else ROOT/'artifacts/live/camera.jpg'; picture(s,example,.8,1.65,6.2,4.8)
 bullets(s,['Primary: waste, mines and weapons.','Secondary: injured people and hostile units.','Depth + timestamp-aligned pose localize detections.','Repeated observations maintain persistent tracks.'],7.4,1.8,5.0,21)
 
-s=slide('TRIAGE / urgency before proximity',45,'Rank confirmed feasible casualties by urgency, then travel time. A distress beacon guides search; visual confirmation is still required. The example priorities are the scenario inputs, not a medical diagnosis from the image.')
+video_chapter(2)
+
+s=slide('Triage / urgency before proximity',45,'Rank confirmed feasible casualties by urgency, then travel time. A distress beacon guides search; visual confirmation is still required. The example priorities are the scenario inputs, not a medical diagnosis from the image.')
 table(s,[['Decision gate','Rule'],['1 / Confirmation','Repeated visual evidence; conservative role voting'],['2 / Feasibility','Rescue + return + landing + reserve must fit'],['3 / Medical priority','Urgency 3 → urgency 2 → urgency 1'],['4 / Tie breaker','Lower predicted travel time']],size=21)
 
-s=slide('NAVIGUER / checked routes and local reflex',55,'A* inflates hazards and obstacles. Every shortcut and route is checked independently by the safety shield. The reflex applies bounded feedback, acceleration/jerk limits and lidar braking. It can stop a planner command without waiting for inference.')
+s=slide('Navigate / checked routes and local reflex',55,'A* inflates hazards and obstacles. Every shortcut and route is checked independently by the safety shield. The reflex applies bounded feedback, acceleration/jerk limits and lidar braking. It can stop a planner command without waiting for inference.')
 bullets(s,['A* with inflated obstacle and exclusion geometry.','Independent route shield checks bounds and intersections.','Lidar braking, wind compensation and stale-data holds.','Authenticated goal changes preempt the current objective.'],.8,1.7,5.4,22)
 picture(s,ROOT/'artifacts/tactical-map-island.png',6.9,1.6,5.6,4.9)
 
-s=slide('Physics / an auditable X500 reference',55,'These are source-backed simulation parameters plus explicitly selected payload and battery assumptions. PX4 source hashes are in the reference JSON. Explain thrust balance and energy, rather than claiming measured physical calibration. Sources: https://github.com/PX4/PX4-gazebo-models ; configs/airframes/x500-research.json.')
+video_chapter(3)
+
+s=slide('Mechanical design / the X500 platform',30,'The photograph shows the Holybro X500 V2 reference product, not a built SKYFORGE aircraft. Its carbon-fiber frame has a 500 mm wheelbase, modular arms, landing gear, companion-computer mounting and camera rails. Product ARF propulsion: 2216 KV920 motors, 20 A ESCs and 1045 propellers. Our simulation uses a separately documented PX4-derived reference with a 0.28 m propeller assumption. Keep that distinction clear. Position battery and payload near the central plate to limit CG offset and attitude coupling. Photograph and product source: https://holybro.com/collections/multicopter-kit/products/x500-v2-kits .')
+picture(s,OUT/'assets/x500-reference.jpg',.8,1.55,6.0,4.85)
+bullets(s,['500 mm carbon-fiber frame with replaceable arms.','Central battery and payload placement limits CG shift.','Camera rails and companion-computer mounting.','Simulation mass: 2.2543 kg, including three 50 g aid kits.'],7.15,1.65,5.35,21)
+text(s,'Holybro X500 V2 product reference / photo: Holybro',.85,6.55,11.5,.35,13,MUTED)
+
+s=slide('Physics / an auditable X500 reference',30,'These are source-backed simulation parameters plus explicitly selected payload and battery assumptions. PX4 source hashes are in the reference JSON. Explain thrust balance and energy, rather than claiming measured physical calibration. Sources: https://github.com/PX4/PX4-gazebo-models ; configs/airframes/x500-research.json.')
 text(s,'2.2543 kg',.85,1.7,5,.65,37,ORANGE,True)
 text(s,'Airframe, rotors, three 50 g kits\nand a 40 g payload mount',.85,2.5,5,1.2,23)
 text(s,'T = kT ω²   /   4T = mg',.85,4.1,5.7,.7,27,CYAN)
@@ -127,30 +149,34 @@ text(s,'14.8 V × 5 Ah\n59.2 Wh usable assumption',7.2,2.5,5.2,1.2,23)
 text(s,'E = ∫ P(t) dt / 3600',7.2,4.1,5.2,.7,27,CYAN)
 text(s,'Wind-relative drag, climb and electronics\n20 Wh declared mission allowance',7.2,5.0,5.2,1.25,22)
 
-s=slide('LIVRER → RETOUR BASE',30,'Delivery requires a confirmed casualty, a stable hover and fresh visual or depth corroboration. The evaluator checks actual position against ground truth after the flight. Delivery is virtual. The dynamic reserve includes return, descent, landing and margin.')
+s=slide('Deliver / return to base',30,'Delivery requires a confirmed casualty, a stable hover and fresh visual or depth corroboration. The evaluator checks actual position against ground truth after the flight. Delivery is virtual. The dynamic reserve includes return, descent, landing and margin.')
 items=['Confirm target','Stable hover','Virtual aid','Audit position']
 for i,label in enumerate(items):
     box(s,label,.8+3.1*i,1.9,2.4,1)
     if i<3:arrow(s,3.25+3.1*i,2.4,3.85+3.1*i,2.4)
 bullets(s,['Recompute return energy for wind, distance and landing.','Return when reserve is threatened or supplies are delivered.','Verify touchdown before disarming.'],.85,3.65,11.7,24)
 
-s=slide('Recorded autonomous mission',90,'Play the embedded 90-second cut. It contains actual simulator camera frames and synchronized station telemetry. The full recording is supplied separately. The telemetry panel is composed from recorded station JSON, not a browser screen capture. The clip is sped up; the source and speed factor are retained in artifacts/demo-recording/recording.json.')
-movie=OUT/'SKYFORGE-pitch-edited.mp4';poster=min((ROOT/'artifacts/demo-recording').glob('observer-*.jpg'),key=lambda p:abs(int(p.stem.split('-')[-1])-400))
-if movie.exists():s.shapes.add_movie(str(movie),Inches(.8),Inches(1.5),Inches(11.75),Inches(4.95),poster_frame_image=str(poster),mime_type='video/mp4')
-else:picture(s,poster,.8,1.5,11.75,4.95)
-text(s,'Actual simulation + synchronized station telemetry  /  accelerated replay',.85,6.55,11.5,.35,15,MUTED)
+video_chapter(4)
+video_chapter(5)
+poster=ROOT/'artifacts/pitch-clean-25.jpg'
 
-s=slide('Resilience / autonomy survives the outage',55,'Describe the recorded 20-second radio blackout, buffering and ordered replay. CRC detects modeled corruption; HMAC authenticates packets. Sequence/TTL reject replay and stale control. The modeled bit-flip test is not an arbitrary hardware error guarantee.')
+s=slide('Resilience / autonomy survives the outage',45,'Describe the recorded 20-second radio blackout, buffering and ordered replay. CRC detects modeled corruption; HMAC authenticates packets. Sequence/TTL reject replay and stale control. The modeled bit-flip test is not an arbitrary hardware error guarantee.')
 for i,label in enumerate(['Event journal','Link unavailable','Buffer onboard','Replay + ACK']):
     box(s,label,.8+i*3.1,1.9,2.4,1)
     if i<3:arrow(s,3.25+i*3.1,2.4,3.85+i*3.1,2.4)
 bullets(s,['Versioned JSON: at most 999 wire bytes.','CRC32 + HMAC-SHA256; sequence and expiry checks.','4,096-event ring, persistent journal and receiver cursor.','State corruption triggers a reflex hold.'],.85,3.6,11.5,23)
 
+s=slide('Dashboard controls / objective and radio',33,'Play the 32.5-second controls demonstration within the ten-minute main sequence. The clip records actual camera frames and station telemetry. Objective and blackout requests use the same authenticated HTTP endpoints as the dashboard buttons; the clip is not a browser screen recording. Explain: Map objective, choose a safe point, watch the checked route and motion; blackout buffers events while autonomy continues.')
+controls=OUT/'SKYFORGE-controls-32s.mp4'
+if controls.exists():s.shapes.add_movie(str(controls),Inches(2.16),Inches(1.4),Inches(9.0),Inches(5.0625),poster_frame_image=str(ROOT/'artifacts/SKYFORGE-controls-32s-poster.jpg'),mime_type='video/mp4')
+text(s,'Map objective  /  checked rerouting  /  radio blackout and autonomous continuation',.85,6.55,11.5,.35,15,MUTED)
+
+
 s=slide('Measured mission results',45,'Read the values from the accepted flight. Distinguish software command dispatch from simulator RPC completion. Model metrics come from 100 unseen views in the same scene, not an unseen-world or real-image benchmark. Source: validation/submission-summary.json.')
 duration=audit['geometry']['duration_sim_s'];energy=audit['last_sample']['energy'];maximum=max(d['horizontal_error_m'] for d in audit['deliveries'])*100
 table(s,[['Acceptance measure','Recorded result'],['Virtual deliveries + return',f"{audit['unique_geometrically_valid_deliveries']}/3  •  {duration:.1f} s"],['Hazard entries / static collision segments',f"{sum(audit['geometry']['zone_entries'].values())} / {audit['geometry']['static_collision_segments']}"],['Largest delivery position error',f'{maximum:.1f} cm'],['Energy remaining',f'{energy:.2f} Wh from 20 Wh'],['Command dispatch / RPC completion p95',f"{timing.get('command_dispatch_p95_ms',0):.1f} / {timing['pipeline_p95_ms']:.1f} ms"]],size=21)
 
-s=slide('Applications and operating model',25,'These are proposed applications and commercial directions, not market or deployment claims. Initial users include civil protection and environmental teams. Budget the complete system: airframe, propulsion, flight controller, sensors, compute, battery, integration and testing. Do not present an unquoted full-system price or invented ROI.')
+s=slide('Applications and operating model',22,'These are proposed applications and commercial directions, not market or deployment claims. Initial users include civil protection and environmental teams. Budget the complete system: airframe, propulsion, flight controller, sensors, compute, battery, integration and testing. Do not present an unquoted full-system price or invented ROI.')
 bullets(s,['Civil protection: reconnaissance and casualty support.','Environmental teams: coastal litter and hazard mapping.','Offer: mission software, integration, training and maintenance.','Budget: aircraft + sensors + compute + power + validation.'],.85,1.8,11.5,25)
 
 s=slide('SKYFORGE',15,'Close on the actual mission: observe, prioritize, deliver and return. Invite questions on planning, physics, detection, resilience and deployment. Main talk including the video is exactly ten minutes; the following slides are backup.')
@@ -170,12 +196,7 @@ table(s,[['Team dataset model','Precision','Recall','mAP50'],['Gun detection','8
 text(s,'Separate model track — not used by the simulator',.85,4.8,11.7,.7,25,ORANGE)
 text(s,'Notebook checkpoints and reported image timings remain separate from mission acceptance.',.85,5.7,11.7,.8,20,MUTED)
 
-s=slide('Backup / dashboard controls',0,'Optional 32-second demonstration outside the ten-minute main sequence. The clip records actual camera frames and station telemetry. Objective and blackout requests use the same authenticated HTTP endpoints as the dashboard buttons; the clip is not a browser screen recording. Explain: Map objective, choose a safe point, watch the checked route and motion; blackout buffers events while autonomy continues.',True)
-controls=OUT/'SKYFORGE-controls-32s.mp4'
-if controls.exists():s.shapes.add_movie(str(controls),Inches(.8),Inches(1.5),Inches(11.75),Inches(4.95),poster_frame_image=str(poster),mime_type='video/mp4')
-text(s,'Map objective  /  checked rerouting  /  radio blackout and autonomous continuation',.85,6.55,11.5,.35,15,MUTED)
-
 assert sum(x['seconds'] for x in schedule if not x['backup'])==600
-destination=OUT/'SKYFORGE-FINAL-10min.pptx';prs.save(destination)
+destination=OUT/'SKYFORGE-PITCH-FINAL.pptx';prs.save(destination)
 (OUT/'pitch-timing.json').write_text(json.dumps(schedule,indent=2)+'\n')
 print(destination)

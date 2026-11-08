@@ -1,0 +1,42 @@
+{
+  "speed": 1.8711111111111112,
+  "source_mission": "native-676ca0dd",
+  "chapters": [
+    {
+      "file": "01-launch.mp4",
+      "title": "Launch and initial climb",
+      "duration_s": 10,
+      "source_edit_start_s": 0
+    },
+    {
+      "file": "02-exploration.mp4",
+      "title": "Exploration and first observations",
+      "duration_s": 10,
+      "source_edit_start_s": 10
+    },
+    {
+      "file": "03-detection.mp4",
+      "title": "Visual confirmation and mapping",
+      "duration_s": 10,
+      "source_edit_start_s": 20
+    },
+    {
+      "file": "04-navigation.mp4",
+      "title": "Checked navigation and approach",
+      "duration_s": 15,
+      "source_edit_start_s": 30
+    },
+    {
+      "file": "05-delivery.mp4",
+      "title": "Target confirmation and virtual aid",
+      "duration_s": 18,
+      "source_edit_start_s": 45
+    },
+    {
+      "file": "06-return.mp4",
+      "title": "Return, descent and touchdown",
+      "duration_s": 27,
+      "source_edit_start_s": 63
+    }
+  ]
+}

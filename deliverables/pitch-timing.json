@@ -14,90 +14,126 @@
   {
     "slide": 3,
     "title": "Two agents. Independent flight protection.",
-    "seconds": 55,
+    "seconds": 40,
     "backup": false
   },
   {
     "slide": 4,
-    "title": "INIT \u2192 autonomous mission",
+    "title": "Initialize / autonomous mission",
     "seconds": 30,
     "backup": false
   },
   {
     "slide": 5,
-    "title": "D\u00c9TECTER / from pixels to mapped objects",
-    "seconds": 55,
+    "title": "Flight recording / Launch and initial climb",
+    "seconds": 10,
     "backup": false
   },
   {
     "slide": 6,
-    "title": "TRIAGE / urgency before proximity",
-    "seconds": 45,
+    "title": "Flight recording / Exploration and first observations",
+    "seconds": 10,
     "backup": false
   },
   {
     "slide": 7,
-    "title": "NAVIGUER / checked routes and local reflex",
-    "seconds": 55,
+    "title": "Detect / from pixels to mapped objects",
+    "seconds": 45,
     "backup": false
   },
   {
     "slide": 8,
-    "title": "Physics / an auditable X500 reference",
-    "seconds": 55,
+    "title": "Flight recording / Visual confirmation and mapping",
+    "seconds": 10,
     "backup": false
   },
   {
     "slide": 9,
-    "title": "LIVRER \u2192 RETOUR BASE",
-    "seconds": 30,
+    "title": "Triage / urgency before proximity",
+    "seconds": 45,
     "backup": false
   },
   {
     "slide": 10,
-    "title": "Recorded autonomous mission",
-    "seconds": 90,
-    "backup": false
-  },
-  {
-    "slide": 11,
-    "title": "Resilience / autonomy survives the outage",
+    "title": "Navigate / checked routes and local reflex",
     "seconds": 55,
     "backup": false
   },
   {
+    "slide": 11,
+    "title": "Flight recording / Checked navigation and approach",
+    "seconds": 15,
+    "backup": false
+  },
+  {
     "slide": 12,
+    "title": "Mechanical design / the X500 platform",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 13,
+    "title": "Physics / an auditable X500 reference",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 14,
+    "title": "Deliver / return to base",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 15,
+    "title": "Flight recording / Target confirmation and virtual aid",
+    "seconds": 18,
+    "backup": false
+  },
+  {
+    "slide": 16,
+    "title": "Flight recording / Return, descent and touchdown",
+    "seconds": 27,
+    "backup": false
+  },
+  {
+    "slide": 17,
+    "title": "Resilience / autonomy survives the outage",
+    "seconds": 45,
+    "backup": false
+  },
+  {
+    "slide": 18,
+    "title": "Dashboard controls / objective and radio",
+    "seconds": 33,
+    "backup": false
+  },
+  {
+    "slide": 19,
     "title": "Measured mission results",
     "seconds": 45,
     "backup": false
   },
   {
-    "slide": 13,
+    "slide": 20,
     "title": "Applications and operating model",
-    "seconds": 25,
+    "seconds": 22,
     "backup": false
   },
   {
-    "slide": 14,
+    "slide": 21,
     "title": "SKYFORGE",
     "seconds": 15,
     "backup": false
   },
   {
-    "slide": 15,
+    "slide": 22,
     "title": "Backup / vision evaluation",
     "seconds": 0,
     "backup": true
   },
   {
-    "slide": 16,
+    "slide": 23,
     "title": "Backup / separate real-image work",
-    "seconds": 0,
-    "backup": true
-  },
-  {
-    "slide": 17,
-    "title": "Backup / dashboard controls",
     "seconds": 0,
     "backup": true
   }
