@@ -1,0 +1,11 @@
+{
+  "v": 1,
+  "frame_id": 42,
+  "t_sim_ns": 2100000000,
+  "camera_id": "downward_rgb",
+  "image_size_wh": [640, 480],
+  "detections": [
+    {"class": "injured_person", "confidence": 0.92, "bbox_xyxy": [220, 160, 300, 240], "source": "secondary"},
+    {"class": "mine", "confidence": 0.84, "bbox_xyxy": [420, 300, 450, 330], "source": "primary"}
+  ]
+}

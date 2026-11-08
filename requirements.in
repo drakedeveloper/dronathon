@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+opencv-contrib-python
+pymavlink
+mavsdk
+pyserial
+pyyaml
+rich
+pytest
+jsonschema

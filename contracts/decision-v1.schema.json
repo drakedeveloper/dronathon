@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skyforge:decision:v1",
+  "title": "Internal AI decision proposal v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "snapshot_seq", "goal_revision", "map_revision", "phase", "target_track_id", "waypoints_enu_m", "return_path_enu_m", "request_delivery", "decision_code", "decision_details"],
+  "properties": {
+    "v": {"const": 1},
+    "snapshot_seq": {"type": "integer", "minimum": 0},
+    "goal_revision": {"type": "integer", "minimum": 0},
+    "map_revision": {"type": "integer", "minimum": 0},
+    "phase": {"enum": ["INIT", "EXPLORER", "DETECTER", "TRIAGE", "NAVIGUER", "LIVRER", "RETOUR_BASE", "POSE"]},
+    "target_track_id": {"type": ["string", "null"]},
+    "waypoints_enu_m": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/point"}},
+    "return_path_enu_m": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/point"}},
+    "request_delivery": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object", "additionalProperties": false, "required": ["request_id", "target_track_id"],
+          "properties": {"request_id": {"type": "string", "minLength": 1}, "target_track_id": {"type": "string", "minLength": 1}}}
+      ]
+    },
+    "decision_code": {"type": "string", "minLength": 1},
+    "decision_details": {"type": "object"}
+  },
+  "$defs": {"point": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}}
+}

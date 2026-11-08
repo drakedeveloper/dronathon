@@ -1,0 +1,8 @@
+{
+  "domain": "rendered development validation",
+  "metrics/precision(B)": 0.840418158666434,
+  "metrics/recall(B)": 0.9781471362902039,
+  "metrics/mAP50(B)": 0.995,
+  "metrics/mAP50-95(B)": 0.47869841269841273,
+  "fitness": 0.47869841269841273
+}

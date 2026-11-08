@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skyforge:detections:v1",
+  "title": "Internal DetectionBatch v1 (team proposal, not a jury-defined schema)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "frame_id", "t_sim_ns", "camera_id", "image_size_wh", "detections"],
+  "properties": {
+    "v": {"const": 1},
+    "frame_id": {"type": "integer", "minimum": 0},
+    "t_sim_ns": {"type": "integer", "minimum": 0},
+    "camera_id": {"type": "string", "minLength": 1},
+    "image_size_wh": {
+      "type": "array", "prefixItems": [{"type": "integer", "minimum": 1}, {"type": "integer", "minimum": 1}],
+      "minItems": 2, "maxItems": 2
+    },
+    "detections": {
+      "type": "array", "maxItems": 256,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["class", "confidence", "bbox_xyxy", "source"],
+        "properties": {
+          "class": {"enum": ["waste", "mine", "weapon", "injured_person", "hostile_unit"]},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "bbox_xyxy": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 4, "maxItems": 4},
+          "source": {"enum": ["primary", "secondary", "mock"]},
+          "subtype": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

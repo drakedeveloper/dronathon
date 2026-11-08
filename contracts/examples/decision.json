@@ -1,0 +1,13 @@
+{
+  "v": 1,
+  "snapshot_seq": 42,
+  "goal_revision": 1,
+  "map_revision": 3,
+  "phase": "NAVIGUER",
+  "target_track_id": "casualty-0002",
+  "waypoints_enu_m": [[2, 0, 5], [2, 8, 5], [12, 8, 5]],
+  "return_path_enu_m": [[12, 8, 5], [2, 8, 5], [2, 0, 5], [0, 0, 5]],
+  "request_delivery": null,
+  "decision_code": "HIGHEST_URGENCY_FEASIBLE",
+  "decision_details": {"urgency_rank": 3, "urgency_source": "scenario_metadata", "required_energy_wh": 5.2, "available_energy_wh": 15.0, "rejected": []}
+}

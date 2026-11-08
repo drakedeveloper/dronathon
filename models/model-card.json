@@ -1,0 +1,26 @@
+{
+  "model": "rendered-domain pixel random forest",
+  "features": "BGR + HSV",
+  "trees": 24,
+  "training_pixels": 66147,
+  "training_images": 70,
+  "classes": {
+    "0": "background",
+    "1": "waste",
+    "2": "mine",
+    "3": "weapon",
+    "4": "injured_person",
+    "5": "hostile_unit"
+  },
+  "training_seconds": 1.7712911009998606,
+  "limitations": [
+    "Appearance/role cues specific to declared synthetic scene",
+    "Not a general photographic hazard or injury detector",
+    "Confidence is a component heuristic, not calibrated probability"
+  ],
+  "data_source": "Rendered Gazebo RGB; annotation boxes used only during training/evaluation",
+  "region_verifier": {
+    "model": "HOG/HSV RBF SVM",
+    "training_regions": 1072
+  }
+}
