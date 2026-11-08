@@ -14,10 +14,10 @@ a separate classical reflex, authenticated radio and a live tactical station.
 for the performance profile without the extra observer camera.
 
 The editable presentation and videos are under `deliverables/`:
-`SKYFORGE-PITCH-FINAL.pptx`, `SKYFORGE-full-mission.mp4` and
+`SKYFORGE-PITCH-EDGE.pptx`, `SKYFORGE-full-mission.mp4` and
 `SKYFORGE-pitch-edited.mp4`. The main deck is timed for ten minutes, including
 six flight chapters totalling 90 seconds and a 32.5-second objective/radio
-controls demonstration. Click each video in slideshow mode. Two additional
+controls demonstration. Click each video in slideshow mode. Three additional
 slides are backup. All presentation
 phase labels are English. Speaker notes contain explanations and sources.
 The mechanical-design slide shows the Holybro X500 V2 product reference,
@@ -505,3 +505,33 @@ are recorded. Unreal, AirSim, Ultralytics and dependencies retain their licences
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) is retained legal provenance,
 not another project guide. No proprietary COD map is bundled, and trained
 weights do not remove upstream Ultralytics licence obligations.
+
+## 14. CPU edge-deployment experiment
+
+Static ONNX INT8 candidates are in `models/edge-int8/`. Each uses QDQ S8S8
+per-channel Conv quantization, calibrated on 32 training images. The native
+launcher retains its accepted FP32 models. Both files shrink from 10.11 MiB
+to 2.98 MiB (70.6%).
+
+Measured on the Ryzen 5 7535HS Windows laptop, CPUExecutionProvider, two
+threads per model, batch 1, 512 input, 10 warmups and 100 timed runs:
+
+| Model | FP32 median / p95 | INT8 median / p95 |
+|---|---:|---:|
+| Primary | 54.7 / 66.7 ms | 83.4 / 91.6 ms |
+| Secondary | 55.3 / 65.9 ms | 48.3 / 83.6 ms |
+
+These are inference-only host measurements. Raspberry Pi ARM64 is a deployment
+target; these figures do not measure or emulate its hardware. On the existing
+100-view rendered test, secondary detection counts are unchanged; primary
+weapon recall decreases from 90% to 75% at the same threshold. Full counts,
+calibration paths and model hashes: `validation/edge-onnx-benchmark.json`.
+
+Reproduce in the prepared native environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-benchmark.in
+.\.venv\Scripts\python.exe -m scripts.benchmark_edge_onnx
+```
+
+Quantization method: [ONNX Runtime documentation](https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html).

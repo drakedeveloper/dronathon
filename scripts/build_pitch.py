@@ -96,7 +96,7 @@ s=slide('The mission',30,'Describe the humanitarian scenario. Mines and weapons 
 bullets(s,['Explore the coastal environment and map hazards.','Locate casualties and prioritize feasible aid.','Continue through radio loss and return with reserve.'])
 picture(s,ROOT/'artifacts/tactical-map-mission.png',6.8,1.55,5.8,4.9)
 
-s=slide('Two agents. Independent flight protection.',40,'Follow the editable diagram from sensors to control. Exactly two deterministic LangGraph nodes: PerceptionAgent and PlannerAgent. No language model runs in the control loop. The radio module is asynchronous and is not a third agent.')
+s=slide('Two agents. Independent flight protection.',35,'Follow the editable diagram from sensors to control. Exactly two deterministic LangGraph nodes: PerceptionAgent and PlannerAgent. No language model runs in the control loop. The radio module is asynchronous and is not a third agent.')
 labels=['RGB + depth','Two detectors','Perception\nAgent','Planner\nAgent','Route shield']
 for i,label in enumerate(labels):
     x=.65+i*2.55;box(s,label,x,1.9,2.05,.9,'22515B' if 'Agent' in label else '243847')
@@ -125,10 +125,10 @@ bullets(s,['Primary: waste, mines and weapons.','Secondary: injured people and h
 
 video_chapter(2)
 
-s=slide('Triage / urgency before proximity',45,'Rank confirmed feasible casualties by urgency, then travel time. A distress beacon guides search; visual confirmation is still required. The example priorities are the scenario inputs, not a medical diagnosis from the image.')
+s=slide('Triage / urgency before proximity',40,'Rank confirmed feasible casualties by urgency, then travel time. A distress beacon guides search; visual confirmation is still required. The example priorities are the scenario inputs, not a medical diagnosis from the image.')
 table(s,[['Decision gate','Rule'],['1 / Confirmation','Repeated visual evidence; conservative role voting'],['2 / Feasibility','Rescue + return + landing + reserve must fit'],['3 / Medical priority','Urgency 3 → urgency 2 → urgency 1'],['4 / Tie breaker','Lower predicted travel time']],size=21)
 
-s=slide('Navigate / checked routes and local reflex',55,'A* inflates hazards and obstacles. Every shortcut and route is checked independently by the safety shield. The reflex applies bounded feedback, acceleration/jerk limits and lidar braking. It can stop a planner command without waiting for inference.')
+s=slide('Navigate / checked routes and local reflex',45,'A* inflates hazards and obstacles. Every shortcut and route is checked independently by the safety shield. The reflex applies bounded feedback, acceleration/jerk limits and lidar braking. It can stop a planner command without waiting for inference.')
 bullets(s,['A* with inflated obstacle and exclusion geometry.','Independent route shield checks bounds and intersections.','Lidar braking, wind compensation and stale-data holds.','Authenticated goal changes preempt the current objective.'],.8,1.7,5.4,22)
 picture(s,ROOT/'artifacts/tactical-map-island.png',6.9,1.6,5.6,4.9)
 
@@ -139,7 +139,7 @@ picture(s,OUT/'assets/x500-reference.jpg',.8,1.55,6.0,4.85)
 bullets(s,['500 mm carbon-fiber frame with replaceable arms.','Central battery and payload placement limits CG shift.','Camera rails and companion-computer mounting.','Simulation mass: 2.2543 kg, including three 50 g aid kits.'],7.15,1.65,5.35,21)
 text(s,'Holybro X500 V2 product reference / photo: Holybro',.85,6.55,11.5,.35,13,MUTED)
 
-s=slide('Physics / an auditable X500 reference',30,'These are source-backed simulation parameters plus explicitly selected payload and battery assumptions. PX4 source hashes are in the reference JSON. Explain thrust balance and energy, rather than claiming measured physical calibration. Sources: https://github.com/PX4/PX4-gazebo-models ; configs/airframes/x500-research.json.')
+s=slide('Physics / an auditable X500 reference',25,'These are source-backed simulation parameters plus explicitly selected payload and battery assumptions. PX4 source hashes are in the reference JSON. Explain thrust balance and energy, rather than claiming measured physical calibration. Sources: https://github.com/PX4/PX4-gazebo-models ; configs/airframes/x500-research.json.')
 text(s,'2.2543 kg',.85,1.7,5,.65,37,ORANGE,True)
 text(s,'Airframe, rotors, three 50 g kits\nand a 40 g payload mount',.85,2.5,5,1.2,23)
 text(s,'T = kT ω²   /   4T = mg',.85,4.1,5.7,.7,27,CYAN)
@@ -172,9 +172,20 @@ if controls.exists():s.shapes.add_movie(str(controls),Inches(2.16),Inches(1.4),I
 text(s,'Map objective  /  checked rerouting  /  radio blackout and autonomous continuation',.85,6.55,11.5,.35,15,MUTED)
 
 
-s=slide('Measured mission results',45,'Read the values from the accepted flight. Distinguish software command dispatch from simulator RPC completion. Model metrics come from 100 unseen views in the same scene, not an unseen-world or real-image benchmark. Source: validation/submission-summary.json.')
+s=slide('Measured mission results',40,'Read the values from the accepted flight. Distinguish software command dispatch from simulator RPC completion. Model metrics come from 100 unseen views in the same scene, not an unseen-world or real-image benchmark. Source: validation/submission-summary.json.')
 duration=audit['geometry']['duration_sim_s'];energy=audit['last_sample']['energy'];maximum=max(d['horizontal_error_m'] for d in audit['deliveries'])*100
 table(s,[['Acceptance measure','Recorded result'],['Virtual deliveries + return',f"{audit['unique_geometrically_valid_deliveries']}/3  •  {duration:.1f} s"],['Hazard entries / static collision segments',f"{sum(audit['geometry']['zone_entries'].values())} / {audit['geometry']['static_collision_segments']}"],['Largest delivery position error',f'{maximum:.1f} cm'],['Energy remaining',f'{energy:.2f} Wh from 20 Wh'],['Command dispatch / RPC completion p95',f"{timing.get('command_dispatch_p95_ms',0):.1f} / {timing['pipeline_p95_ms']:.1f} ms"]],size=21)
+
+s=slide('Edge deployment / ONNX INT8',30,'Quantized candidate models are measured on the AMD Ryzen 5 7535HS Windows laptop CPU, using CPUExecutionProvider and two intra-op threads per model. This is a host CPU benchmark, not Raspberry Pi hardware measurements or a performance emulation. Static QDQ S8S8 per-channel Conv quantization uses 32 training images per model, with MinMax calibration. Latency covers session.run only: batch one, 512 input, 10 warmups, 100 timed runs. Accuracy is separately checked on 100 existing rendered test views at IoU 0.5. The flight runtime retains the accepted FP32 models. Source: validation/edge-onnx-benchmark.json; https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html . Raspberry Pi is the planned ARM64 CPU deployment target.')
+edge=json.loads((ROOT/'validation/edge-onnx-benchmark.json').read_text())
+rows=[['Model','Format','Size (MiB)','Median (ms)','p95 (ms)']]
+for kind,model in edge['models'].items():
+    for variant,metrics in model['variants'].items():
+        rows.append([kind.title(),variant,f"{metrics['bytes']/1048576:.2f}",f"{metrics['inference_p50_ms']:.1f}",f"{metrics['inference_p95_ms']:.1f}"])
+table(s,rows,y=1.65,h=3.2,size=22)
+text(s,'Measured host: Ryzen 5 7535HS / CPU only / 2 threads per model',.85,5.05,11.5,.55,20,MUTED)
+text(s,'Deployment target: Raspberry Pi ARM64 + ONNX Runtime CPU',.85,5.75,11.5,.65,22,CYAN)
+text(s,'70.6% smaller files / FP32 retained for flight / accuracy comparison in backup',.85,6.45,11.5,.35,15,MUTED)
 
 s=slide('Applications and operating model',22,'These are proposed applications and commercial directions, not market or deployment claims. Initial users include civil protection and environmental teams. Budget the complete system: airframe, propulsion, flight controller, sensors, compute, battery, integration and testing. Do not present an unquoted full-system price or invented ROI.')
 bullets(s,['Civil protection: reconnaissance and casualty support.','Environmental teams: coastal litter and hazard mapping.','Offer: mission software, integration, training and maintenance.','Budget: aircraft + sensors + compute + power + validation.'],.85,1.8,11.5,25)
@@ -196,7 +207,15 @@ table(s,[['Team dataset model','Precision','Recall','mAP50'],['Gun detection','8
 text(s,'Separate model track — not used by the simulator',.85,4.8,11.7,.7,25,ORANGE)
 text(s,'Notebook checkpoints and reported image timings remain separate from mission acceptance.',.85,5.7,11.7,.8,20,MUTED)
 
+s=slide('Backup / quantization accuracy',0,'Measured on 100 existing rendered test views, same thresholds and IoU 0.5 for FP32 and INT8. This is a fixed-threshold comparison, not new mAP. The primary model loses weapon recall after quantization, so INT8 is kept as a deployment candidate. The secondary model has identical TP/FP/FN counts in this sample. Timing covers inference only and excludes preprocessing, NMS, agents, radio and flight control. See validation/edge-onnx-benchmark.json for calibration paths, SHA256 and exact counts.',True)
+rows=[['Class','FP32 recall','INT8 recall']]
+for kind,model in edge['models'].items():
+    for name,values in model['variants']['FP32']['counts'].items():
+        q=model['variants']['INT8']['counts'][name]
+        rows.append([name.replace('_',' ').title(),f"{100*values['recall']:.1f}%",f"{100*q['recall']:.1f}%"])
+table(s,rows,size=21)
+
 assert sum(x['seconds'] for x in schedule if not x['backup'])==600
-destination=OUT/'SKYFORGE-PITCH-FINAL.pptx';prs.save(destination)
+destination=OUT/'SKYFORGE-PITCH-EDGE.pptx';prs.save(destination)
 (OUT/'pitch-timing.json').write_text(json.dumps(schedule,indent=2)+'\n')
 print(destination)

@@ -1,0 +1,2 @@
+# Install alongside the existing native environment; do not replace its ONNX Runtime wheel.
+onnx==1.19.1

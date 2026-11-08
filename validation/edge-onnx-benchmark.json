@@ -1,0 +1,216 @@
+{
+  "hardware": "AMD Ryzen 5 7535HS, Windows x86-64",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "provider": "CPUExecutionProvider",
+  "onnxruntime": "1.31.1",
+  "threads_per_model": 2,
+  "batch": 1,
+  "input": "RGB float32 NCHW 1x3x512x512, letterbox",
+  "scope": "Measured laptop CPU inference, not a Raspberry Pi execution or performance prediction",
+  "quantization": "Static QDQ S8S8, per-channel Conv weights, MinMax calibration on 32 training images per model",
+  "source": "https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html",
+  "models": {
+    "primary": {
+      "calibration_images": [
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0000.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0009.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0019.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0028.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0038.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0048.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0057.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0067.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0077.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0086.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0096.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0106.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0115.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0125.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0135.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0144.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0154.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0163.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0173.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0183.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0192.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0202.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0212.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0221.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0231.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0241.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0250.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0260.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0270.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0279.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0289.jpg",
+        "data\\yolo_primary-prop-corrected\\images\\train\\train-0299.jpg"
+      ],
+      "variants": {
+        "FP32": {
+          "bytes": 10604922,
+          "sha256": "2a2b856b437ad55ce0ea34ce69da853551e587cd6b31b04c3e392e7fc72f43da",
+          "warmup": 10,
+          "timed_runs": 100,
+          "inference_p50_ms": 54.7368,
+          "inference_p95_ms": 66.713665,
+          "evaluation_images": 100,
+          "confidence": 0.35,
+          "iou": 0.5,
+          "counts": {
+            "mine": {
+              "tp": 23,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0
+            },
+            "weapon": {
+              "tp": 18,
+              "fp": 0,
+              "fn": 2,
+              "precision": 1.0,
+              "recall": 0.9
+            },
+            "waste": {
+              "tp": 45,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0
+            }
+          }
+        },
+        "INT8": {
+          "bytes": 3122463,
+          "sha256": "d96fa45bf0fdf9462576763e8fb010e8d92669123b1bab15341896ac5afa53c6",
+          "warmup": 10,
+          "timed_runs": 100,
+          "inference_p50_ms": 83.441,
+          "inference_p95_ms": 91.584735,
+          "evaluation_images": 100,
+          "confidence": 0.35,
+          "iou": 0.5,
+          "counts": {
+            "mine": {
+              "tp": 23,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0
+            },
+            "weapon": {
+              "tp": 15,
+              "fp": 2,
+              "fn": 5,
+              "precision": 0.8823529411764706,
+              "recall": 0.75
+            },
+            "waste": {
+              "tp": 45,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0
+            }
+          }
+        }
+      }
+    },
+    "secondary": {
+      "calibration_images": [
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0000.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0022.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0045.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0067.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0090.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0112.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0135.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0157.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0180.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0202.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0225.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0248.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0270.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0293.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0315.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0338.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0360.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0383.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0405.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0428.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0450.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0473.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0496.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0518.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0541.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0563.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0586.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0608.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0631.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0653.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0676.jpg",
+        "data\\yolo_secondary-native-v3fast\\images\\train\\train-0699.jpg"
+      ],
+      "variants": {
+        "FP32": {
+          "bytes": 10603955,
+          "sha256": "fdedbe1b58f52a25d9f3ce8071a23c4582262880e4217976fa9245c642140629",
+          "warmup": 10,
+          "timed_runs": 100,
+          "inference_p50_ms": 55.25775,
+          "inference_p95_ms": 65.85793000000001,
+          "evaluation_images": 100,
+          "confidence": 0.25,
+          "iou": 0.5,
+          "counts": {
+            "injured_person": {
+              "tp": 30,
+              "fp": 1,
+              "fn": 5,
+              "precision": 0.967741935483871,
+              "recall": 0.8571428571428571
+            },
+            "hostile_unit": {
+              "tp": 24,
+              "fp": 2,
+              "fn": 2,
+              "precision": 0.9230769230769231,
+              "recall": 0.9230769230769231
+            }
+          }
+        },
+        "INT8": {
+          "bytes": 3122114,
+          "sha256": "2a4b112e5d7e2bbbda16bf779b28dacd0ba9ec2182ba6ddaad3eb3de83619eb0",
+          "warmup": 10,
+          "timed_runs": 100,
+          "inference_p50_ms": 48.2576,
+          "inference_p95_ms": 83.59266000000001,
+          "evaluation_images": 100,
+          "confidence": 0.25,
+          "iou": 0.5,
+          "counts": {
+            "injured_person": {
+              "tp": 30,
+              "fp": 1,
+              "fn": 5,
+              "precision": 0.967741935483871,
+              "recall": 0.8571428571428571
+            },
+            "hostile_unit": {
+              "tp": 24,
+              "fp": 2,
+              "fn": 2,
+              "precision": 0.9230769230769231,
+              "recall": 0.9230769230769231
+            }
+          }
+        }
+      }
+    }
+  },
+  "evaluation_domain": "100 existing rendered test views in the same authored scene; fixed thresholds, not mAP",
+  "measurement_boundary": "session.run only, no preprocessing, NMS, agent, simulator or radio work",
+  "decision": "Keep accepted FP32 flight models. INT8 reduces files but worsens primary weapon recall and p95 latency on this host.",
+  "cpu_model_measurements": "Models timed sequentially in separate sessions, not combined throughput"
+}

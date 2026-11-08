@@ -14,7 +14,7 @@
   {
     "slide": 3,
     "title": "Two agents. Independent flight protection.",
-    "seconds": 40,
+    "seconds": 35,
     "backup": false
   },
   {
@@ -50,13 +50,13 @@
   {
     "slide": 9,
     "title": "Triage / urgency before proximity",
-    "seconds": 45,
+    "seconds": 40,
     "backup": false
   },
   {
     "slide": 10,
     "title": "Navigate / checked routes and local reflex",
-    "seconds": 55,
+    "seconds": 45,
     "backup": false
   },
   {
@@ -74,7 +74,7 @@
   {
     "slide": 13,
     "title": "Physics / an auditable X500 reference",
-    "seconds": 30,
+    "seconds": 25,
     "backup": false
   },
   {
@@ -110,30 +110,42 @@
   {
     "slide": 19,
     "title": "Measured mission results",
-    "seconds": 45,
+    "seconds": 40,
     "backup": false
   },
   {
     "slide": 20,
+    "title": "Edge deployment / ONNX INT8",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 21,
     "title": "Applications and operating model",
     "seconds": 22,
     "backup": false
   },
   {
-    "slide": 21,
+    "slide": 22,
     "title": "SKYFORGE",
     "seconds": 15,
     "backup": false
   },
   {
-    "slide": 22,
+    "slide": 23,
     "title": "Backup / vision evaluation",
     "seconds": 0,
     "backup": true
   },
   {
-    "slide": 23,
+    "slide": 24,
     "title": "Backup / separate real-image work",
+    "seconds": 0,
+    "backup": true
+  },
+  {
+    "slide": 25,
+    "title": "Backup / quantization accuracy",
     "seconds": 0,
     "backup": true
   }

@@ -1,0 +1,11 @@
+{
+  "status": "Experimental CPU deployment candidates; not selected by flight launcher",
+  "quantization": "Static QDQ S8S8, per-channel Conv weights, MinMax calibration on 32 training images per model",
+  "preprocessing": "RGB float32 NCHW 1x3x512x512, letterbox",
+  "source_bundle": "../native/bundle.json",
+  "benchmark": "../../validation/edge-onnx-benchmark.json",
+  "files": {
+    "primary": "d96fa45bf0fdf9462576763e8fb010e8d92669123b1bab15341896ac5afa53c6",
+    "secondary": "2a4b112e5d7e2bbbda16bf779b28dacd0ba9ec2182ba6ddaad3eb3de83619eb0"
+  }
+}
