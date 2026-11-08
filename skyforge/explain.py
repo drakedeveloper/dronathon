@@ -15,6 +15,9 @@ def explain_decision(decision):
                 f"return threshold {details.get('return_threshold_wh',0):.2f} Wh, including descent and landing.")
     messages={
         'TAKEOFF_TO_SURVEY_ALTITUDE':'Climb vertically to the configured survey altitude before horizontal travel.',
+        'GROUND_STATION_REROUTE':'A new authenticated station objective preempts rescue navigation; the checked route and return reserve remain mandatory.',
+        'GROUND_OBJECTIVE_REACHED':'The revised station objective has been reached. Resume autonomous triage.',
+        'GROUND_OBJECTIVE_REJECTED_UNSAFE_OR_ENERGY':'The requested objective has no safe route or insufficient rescue-and-return energy. Reject it and resume autonomous triage.',
         'INVESTIGATE_DISTRESS_BEACON':'Investigate the highest-urgency unconfirmed radio beacon. Camera confirmation is required before delivery.',
         'SUPPLIES_DELIVERED_RETURN':'All carried supplies delivered. Return to base without spending reserve on further searching.',
         'TEMPORARY_RETURN_ROUTE_BLOCKED_HOLD':'No return route was established within the current constraints and search budget. Hold and replan.',

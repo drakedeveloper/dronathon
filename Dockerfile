@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl gnupg ca-c
     && apt-get update && apt-get install -y --no-install-recommends gz-harmonic \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN python3 -m venv --system-site-packages /opt/skyforge/venv \
-    && /opt/skyforge/venv/bin/pip install --no-cache-dir langgraph==1.2.20 jsonschema rich onnxruntime==1.31.1 msgpack==1.2.4
+    && /opt/skyforge/venv/bin/pip install --no-cache-dir numpy==1.26.4 langgraph==1.2.20 jsonschema rich onnxruntime==1.31.1 msgpack==1.2.4
 WORKDIR /mnt/d/dronathon
 COPY . .
 RUN mkdir -p /opt/skyforge/plugins /opt/skyforge/artifacts \

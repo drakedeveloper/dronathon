@@ -26,6 +26,7 @@ class NativeMailbox:
     def __init__(self,key):
         self.codec=Codec(key);self.guard=ReplayGuard();self.goal=None;self.crc=None
         self.received_wall=0.;self.rejected=0
+        self.accepted_frame_ns=0;self.accepted_latency_ms=None
     def receive(self,packet):
         try:
             body=self.codec.decode(packet)
@@ -47,6 +48,10 @@ class NativeMailbox:
                 if not 0<zone[2]<=20:raise PacketError('Invalid hazard radius')
             if not self.guard.accept(body):return False
             self.goal=body;self.crc=zlib.crc32(canonical(body));self.received_wall=time.monotonic()
+            frame_ns=body['data'].get('frame_request_wall_ns',0)
+            if type(frame_ns) is int and frame_ns>0 and frame_ns!=self.accepted_frame_ns:
+                self.accepted_frame_ns=frame_ns
+                self.accepted_latency_ms=max(0.,(time.monotonic_ns()-frame_ns)/1e6)
             if body['data'].get('fault_inject'):
                 changed=bytearray(struct.pack('d',body['data']['p'][0]));changed[2]^=1
                 body['data']['p'][0]=struct.unpack('d',changed)[0]
@@ -166,6 +171,7 @@ class NativeReflex:
                           'crc_hold_cycles':self.crc_holds,'overrides':self.override_cycles,
                           'pose_errors':self.pose_errors,'lidar_errors':self.lidar_errors,
                           'completed_frame_ns':self.completed_frame_ns,'completed_latency_ms':self.completed_latency_ms,
+                          'accepted_frame_ns':self.mailbox.accepted_frame_ns,'accepted_latency_ms':self.mailbox.accepted_latency_ms,
                           'bad_packets':self.mailbox.rejected,'armed':self.armed}
                     info['collision']=pose.get('collision',{})
                     self.socket.sendto(json.dumps(info,separators=(',',':'),allow_nan=False).encode(),self.stats_destination)

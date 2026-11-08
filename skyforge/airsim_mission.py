@@ -51,7 +51,7 @@ class NativeMission:
         self.battery=Battery(config.get('mission_energy_allowance_wh',self.mission_inputs['mission_energy_allowance_wh']))
         self.ai=MissionAI({'reserve_wh':1.,'survey_altitude_m':self.mission_inputs['survey_altitude_m'],'vehicle':self.vehicle})
         self.backend=AirSimBackend(port=config['api_port'],translation_enu=config.get('translation_enu',[0,0,0]))
-        self.vision=NeuralVisionSystem(Path(config.get('models_dir',ROOT/'models')),device=config.get('vision_device','cpu'))
+        self.vision=NeuralVisionSystem(Path(config.get('models_dir',ROOT/'models/native')),device=config.get('vision_device','cpu'),size=config.get('vision_size',512))
         self.id='native-'+uuid.uuid4().hex[:8];self.session=uuid.uuid4().hex[:10];self.control_seq=0
         self.directory=ROOT/'artifacts/native_missions'/self.id;self.directory.mkdir(parents=True,exist_ok=True)
         self.radio=RadioClient(self.id,self.directory/'radio',port=config['radio_port'])
@@ -63,6 +63,7 @@ class NativeMission:
         self.running=True;self.frame=None;self.batch=None;self.camera_received=0.;self.camera_errors=0
         self.vision_ms=deque(maxlen=1000);self.ai_ms=deque(maxlen=1500);self.pipeline_ms=deque(maxlen=1500)
         self.ack_frame=0;self.stats={};self.stats_received=0.;self.lock=threading.Lock()
+        self.accepted_frame=0;self.acceptance_ms=deque(maxlen=1500)
         self.pose_history=deque(maxlen=100);self.pose_lock=threading.Lock()
         self.events=[];self.trace=[];self.served=set();self.supply_count=3;self.delivery_dwell={}
         self.coverage=CoverageGrid(bounds=tuple(self.mission_inputs['bounds']));self.reported=set()
@@ -109,6 +110,9 @@ class NativeMission:
                 identity=data.get('completed_frame_ns',0);latency=data.get('completed_latency_ms')
                 if identity and identity!=self.ack_frame and isinstance(latency,(float,int)) and 0<=latency<10000:
                     self.ack_frame=identity;self.pipeline_ms.append(latency)
+                identity=data.get('accepted_frame_ns',0);latency=data.get('accepted_latency_ms')
+                if identity and identity!=self.accepted_frame and isinstance(latency,(float,int)) and 0<=latency<10000:
+                    self.accepted_frame=identity;self.acceptance_ms.append(latency)
             except (ValueError,KeyError,TypeError):continue
 
     def run(self):
@@ -224,6 +228,8 @@ class NativeMission:
                             'vision_p95_ms':float(np.percentile(vision_times,95)) if vision_times else 0.,
                             'pipeline_p95_ms':float(np.percentile(self.pipeline_ms,95)) if self.pipeline_ms else None,
                             'pipeline_scope':'camera request to completed velocity RPC; conservative completion upper bound',
+                            'command_acceptance_p95_ms':float(np.percentile(self.acceptance_ms,95)) if self.acceptance_ms else None,
+                            'command_acceptance_scope':'camera request to authenticated first receipt in reflex mailbox; excludes velocity RPC completion',
                             'control':self.stats,'security':dict(self.radio.counters),'route':route,'obstacles':observed,
                             'coverage':self.coverage.summary(),'coverage_cells':self.coverage_cells,'camera_errors':self.camera_errors,
                             'tracks':[{**track,'served':track['id'] in self.ai.planner.served} for track in tracks],

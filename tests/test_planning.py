@@ -85,3 +85,28 @@ def test_temporary_blocked_return_does_not_latch_full_battery_return():
     decision=planner.plan(state,{})
     assert not planner.return_latched
     assert decision["decision_code"]=="TEMPORARY_RETURN_ROUTE_BLOCKED_HOLD"
+
+
+def test_station_objective_preempts_detected_casualty_and_honors_requested_altitude():
+    planner=PlannerAgent({'reserve_wh':1});planner.phase='NAVIGUER'
+    state={'position_enu_m':[-10,-8,8],'base_enu_m':[-12,-9,.05],'battery_wh':30,
+           'snapshot_seq':2,'obstacle_circles':[],'events':[],'supply_count':3,
+           'goal_revision':1,'goal_update':{'position':[-8,-8,6]}}
+    casualty={'id':'casualty','class':'injured_person','position':[-9,-7,0],'seen_count':3,'last_seen':0}
+    decision=planner.plan(state,{'casualty':casualty})
+    assert decision['decision_code']=='GROUND_STATION_REROUTE'
+    assert decision['waypoints_enu_m'][-1]==[-8.,-8.,6.]
+    assert decision['request_delivery'] is None
+
+
+def test_unsafe_station_objective_is_rejected_and_return_interrupt_has_priority():
+    planner=PlannerAgent({'reserve_wh':1});planner.phase='NAVIGUER'
+    state={'position_enu_m':[-10,-8,8],'base_enu_m':[-12,-9,.05],'battery_wh':30,
+           'snapshot_seq':2,'obstacle_circles':[{'x':0,'y':0,'radius':2}],
+           'events':[],'goal_revision':1,'goal_update':{'position':[0,0,6]}}
+    decision=planner.plan(state,{})
+    assert decision['decision_code']=='GROUND_OBJECTIVE_REJECTED_UNSAFE_OR_ENERGY'
+    assert decision['waypoints_enu_m']==[state['position_enu_m']]
+    assert planner.last_goal_revision==1
+    state.update(battery_wh=.5,goal_revision=2)
+    assert planner.plan(state,{})['phase']=='RETOUR_BASE'

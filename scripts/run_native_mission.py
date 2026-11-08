@@ -22,6 +22,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--device',choices=['cpu','cuda'],default='cuda')
     parser.add_argument('--models',type=Path,default=ROOT/'models/native')
+    parser.add_argument('--vision-size',type=int,choices=[384,512],default=512)
     parser.add_argument('--exit-on-complete',action='store_true',help='Stop station after an automated campaign run')
     parser.add_argument('--energy-wh',type=float,default=15.,help='Declared mission stress allowance; cannot exceed reference usable battery energy')
     args=parser.parse_args()
@@ -55,6 +56,7 @@ def main():
             'home_body_z':base[2],'control_key':str(control),'command_port':42101,
             'stats_port':42102,'radio_port':8767,'vision_device':args.device,
             'models_dir':str(args.models.resolve()),
+            'vision_size':args.vision_size,
             'mission_energy_allowance_wh':args.energy_wh,'reference_usable_energy_wh':usable_energy,
             'scene_manifest':str(scene_manifest),
             'max_mission_seconds':360}

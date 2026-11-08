@@ -3,7 +3,7 @@ $root=Split-Path -Parent $PSScriptRoot
 $environment=Join-Path $env:LOCALAPPDATA 'SKYFORGE\venv-native'
 $python=Join-Path $environment 'Scripts\python.exe'
 if(!(Test-Path -LiteralPath $python)) {
-    & (Join-Path $root '.venv\Scripts\python.exe') -m venv $environment
+    & py -3.13 -m venv $environment
     if($LASTEXITCODE -ne 0){throw 'Native GPU environment creation failed'}
 }
 & $python -m pip install --no-cache-dir --disable-pip-version-check -r (Join-Path $root 'requirements-native.in')

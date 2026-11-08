@@ -1,0 +1,21 @@
+name: Source and ROS2 deployment checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['Dockerfile', '.dockerignore', 'skyforge/**', 'station/**', 'sim/**', 'scripts/**', 'tests/**', '.github/workflows/**']
+permissions:
+  contents: read
+concurrency:
+  group: deployment-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ros2-container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build ROS2 Jazzy and Gazebo deployment
+        run: docker build --progress=plain -t skyforge:ci .
+      - name: Run source tests inside the deployment
+        run: docker run --rm --entrypoint bash skyforge:ci -lc 'source /opt/skyforge/env.sh; python -m pytest -q --basetemp=/tmp/skyforge-tests'

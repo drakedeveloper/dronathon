@@ -209,6 +209,22 @@ class PlannerAgent:
             self.phase="RETOUR_BASE";code="SUPPLIES_DELIVERED_RETURN" if snapshot.get('supply_count',1)<=0 else "DYNAMIC_ENERGY_RETURN";path=return_path
         elif pos[2]<self.altitude-.5 and self.phase=="INIT":
             path=[pos.tolist(),[pos[0],pos[1],self.altitude]];code="TAKEOFF_TO_SURVEY_ALTITUDE"
+        elif (snapshot.get('goal_update') or {}).get('position') and snapshot.get('goal_revision',0)>self.last_goal_revision:
+            # Ground-station objective changes preempt medical navigation,
+            # while the return-reserve interrupt above remains authoritative.
+            revision=snapshot['goal_revision'];goal=np.asarray(snapshot['goal_update']['position'],float)
+            path=astar(pos,goal,circles,altitude=self.altitude)
+            inbound=astar(goal,base,circles,altitude=self.altitude)
+            required=math.inf
+            if path and inbound:
+                if abs(goal[2]-self.altitude)>.1:path.append(goal.tolist())
+                required=(self.energy_for_route(path,wind)[0]+self.energy_for_route(inbound,wind,landing=True)[0])*1.2+reserve
+            detail.update(requested_goal_revision=revision,goal_required_energy_wh=required)
+            self.phase='NAVIGUER';code='GROUND_STATION_REROUTE'
+            if not path or required>energy:
+                self.last_goal_revision=revision;self.phase='TRIAGE';path=[pos.tolist()];code='GROUND_OBJECTIVE_REJECTED_UNSAFE_OR_ENERGY'
+            elif np.linalg.norm(pos-goal)<.6:
+                self.last_goal_revision=revision;self.phase='TRIAGE';path=[pos.tolist()];code='GROUND_OBJECTIVE_REACHED'
         else:
             candidates=[]
             for t in tracks.values():

@@ -48,6 +48,9 @@ class Handler(BaseHTTPRequestHandler):
             except PermissionError:return self.respond(b"",503,kind="image/jpeg")
             return self.respond(content,kind="image/jpeg")
         if path=="/":return self.respond((DIST/"index.html").read_bytes(),kind="text/html; charset=utf-8")
+        if path in ('/assets/site-aerial.jpg','/assets/mission-aerial.jpg'):
+            try:return self.respond((DIST/path.lstrip('/')).read_bytes(),kind='image/jpeg')
+            except FileNotFoundError:return self.respond(b'',404,kind='image/jpeg')
         return self.respond({"error":"not found"},404)
 
     def do_POST(self):

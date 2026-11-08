@@ -36,3 +36,14 @@ def test_control_expiry_and_envelope_share_absolute_simulator_clock():
     data={'p':[0.,0.,8.],'valid_until':int((absolute+.65)*1000),'phase':'EXPLORER'}
     assert box.receive(box.codec.encode(envelope('native','session','command',1,absolute,'setpoint',data)))
     assert box.reason(absolute+.1)=='OK'
+
+
+def test_first_authenticated_frame_receipt_is_measured_once_not_repeated_setpoints():
+    import time
+    box=NativeMailbox(b'x'*32);frame=time.monotonic_ns()-10_000_000
+    data={'p':[0.,0.,8.],'valid_until':1000,'phase':'EXPLORER','frame_request_wall_ns':frame}
+    assert box.receive(box.codec.encode(envelope('native','session','command',1,0,'setpoint',data)))
+    first=box.accepted_latency_ms
+    assert first>=10
+    assert box.receive(box.codec.encode(envelope('native','session','command',2,0,'setpoint',data)))
+    assert box.accepted_latency_ms==first
