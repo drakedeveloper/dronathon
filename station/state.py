@@ -10,5 +10,12 @@ def read_onboard(path):
             stamp=os.fstat(handle.fileno()).st_mtime
             data=json.load(handle)
         return data,time.time()-stamp>3
-    except (FileNotFoundError,json.JSONDecodeError):
+    except (FileNotFoundError,PermissionError,json.JSONDecodeError):
         return {'phase':'WAITING','t':0},True
+
+
+def read_evaluation(path,mission):
+    try:
+        report=json.loads(path.read_text())
+        return report if report.get('mission_id')==mission else None
+    except (FileNotFoundError,PermissionError,json.JSONDecodeError):return None

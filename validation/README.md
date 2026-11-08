@@ -45,7 +45,11 @@ Real socket outage/replay/bitflip tests exist. A prior live outage preserved
 autonomy and reconnection but contained no buffered events. A later live test
 hit a dashboard snapshot race, which was fixed. Do not count that aborted test
 as buffered replay proof. Receiver restart cursors now persist before ACK.
-Onboard journal recovery after process death remains unfinished.
+Onboard event-journal recovery now resumes the same authenticated session and
+pending events after a radio process restart. Partial final writes are trimmed;
+complete corrupted records fail closed. Socket tests cover sender and receiver
+restart without double-counting. Full mission/controller state restart is not
+implemented.
 
 HMAC authenticates packets, CRC detects modeled corruption, and replay counters
 reject duplicates. Encryption, ECC hardware and arbitrary hardware fault

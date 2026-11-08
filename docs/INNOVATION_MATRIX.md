@@ -8,9 +8,9 @@ communication remain deterministic modules.
 | Idea | Current implementation / limit |
 |---|---|
 | 1. Living tactical map | Live tracks, hazard circles, routes, lidar points; depth-checked observed-ground grid added. No full 3D occupancy map. |
-| 2. Second-chance detection | Repeated-frame association exists; deliberate viewpoint changes pending. |
+| 2. Second-chance detection | Repeated-frame association, visible-empty-ground invalidation and fresh delivery sighting; deliberate viewpoint changes pending. |
 | 3. Energy-aware rescue | Wind feasibility, slow cruise/vertical/delivery/landing budget, dynamic reserve; one three-delivery safe-return run recorded. |
-| 4. Radio shadow memory | Buffer/replay implemented; spatial connectivity learning pending. |
+| 4. Radio shadow memory | Buffer/replay and authenticated journal/ACK recovery after radio process restart; spatial connectivity learning pending. |
 | 5. Future collision prediction | Lidar braking exists; moving-object tracking and TTC prediction pending. |
 | 6. Explainable brain | Reason codes, candidate energy/urgency evidence and deterministic human-readable explanations. |
 | 7. Smart delivery | Camera-confirmed tracks, stable hover and hazard checks; virtual delivery only. Physical pack release pending. |

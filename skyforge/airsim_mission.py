@@ -48,7 +48,7 @@ class NativeMission:
         self.config=config
         self.mission_inputs=json.loads((ROOT/'configs/scenes/coastal-rescue.json').read_text())['mission']
         self.vehicle=Vehicle.from_reference(ROOT/'configs/airframes/x500-research.json')
-        self.battery=Battery(self.mission_inputs['mission_energy_allowance_wh'])
+        self.battery=Battery(config.get('mission_energy_allowance_wh',self.mission_inputs['mission_energy_allowance_wh']))
         self.ai=MissionAI({'reserve_wh':1.,'survey_altitude_m':self.mission_inputs['survey_altitude_m'],'vehicle':self.vehicle})
         self.backend=AirSimBackend(port=config['api_port'],translation_enu=config.get('translation_enu',[0,0,0]))
         self.vision=NeuralVisionSystem(Path(config.get('models_dir',ROOT/'models')),device=config.get('vision_device','cpu'))
@@ -63,6 +63,7 @@ class NativeMission:
         self.running=True;self.frame=None;self.batch=None;self.camera_received=0.;self.camera_errors=0
         self.vision_ms=deque(maxlen=1000);self.ai_ms=deque(maxlen=1500);self.pipeline_ms=deque(maxlen=1500)
         self.ack_frame=0;self.stats={};self.stats_received=0.;self.lock=threading.Lock()
+        self.pose_history=deque(maxlen=100);self.pose_lock=threading.Lock()
         self.events=[];self.trace=[];self.served=set();self.supply_count=3;self.delivery_dwell={}
         self.coverage=CoverageGrid(bounds=tuple(self.mission_inputs['bounds']));self.reported=set()
         self.live=ROOT/'artifacts/live';self.live.mkdir(parents=True,exist_ok=True)
@@ -70,15 +71,17 @@ class NativeMission:
         cv2.putText(observer,'Native AirSim: see the Unreal window',(24,170),cv2.FONT_HERSHEY_SIMPLEX,.65,(180,220,240),1)
         temporary=self.live/'observer.tmp.jpg';cv2.imwrite(str(temporary),observer);replace_live(temporary,self.live/'observer.jpg')
         self.log=(self.directory/'decisions.jsonl').open('w');self.fault_next=False;self.goal_revision=0;self.goal_update=None
+        self.trace_log=(self.directory/'trace.jsonl').open('a',buffering=1)
         self.last_phase=None;self.last_checkpoint=-5.;self.emergency=False;self.last_coverage=-1.;self.coverage_cells=[]
 
     def cameras(self):
         while self.running:
             start=time.monotonic()
             try:
-                frame=self.backend.frame()
+                frame=self.backend.frame(pose_provider=self.poses)
                 begin=time.perf_counter_ns()
-                batch=self.vision.infer(frame['image'],{'frame_id':frame['frame_id'],'t_sim_ns':int(frame['t']*1e9)})
+                batch=self.vision.infer(frame['image'],{'frame_id':frame['frame_id'],'t_sim_ns':int(frame['t']*1e9)},
+                    secondary_zoom_out=frame['pose']['p'][2]<4.)
                 elapsed=(time.perf_counter_ns()-begin)/1e6
                 with self.lock:self.frame=frame;self.batch=batch;self.camera_received=time.monotonic();self.vision_ms.append(elapsed)
             except (OSError,ValueError,RuntimeError):self.camera_errors+=1
@@ -86,6 +89,9 @@ class NativeMission:
 
     def emit(self,kind,data,t):
         self.events.append({'type':kind,**clean(data)});self.radio.event(kind,data,t)
+
+    def poses(self):
+        with self.pose_lock:return list(self.pose_history)
 
     def receive_stats(self):
         while True:
@@ -96,6 +102,9 @@ class NativeMission:
                 data=json.loads(packet);checked=np.asarray([*data['p'],*data['v'],*data['q'],data['t']],float)
                 if not np.all(np.isfinite(checked)):continue
                 self.stats=data;self.stats_received=time.monotonic()
+                with self.pose_lock:
+                    self.pose_history.append({'t':data['t'],'t_ns':int(data['t']*1e9),
+                        'p':np.asarray(data['p'],float),'v':np.asarray(data['v'],float),'q':np.asarray(data['q'],float)})
                 identity=data.get('completed_frame_ns',0);latency=data.get('completed_latency_ms')
                 if identity and identity!=self.ack_frame and isinstance(latency,(float,int)) and 0<=latency<10000:
                     self.ack_frame=identity;self.pipeline_ms.append(latency)
@@ -115,10 +124,14 @@ class NativeMission:
                 if start_sim is None:
                     start_sim=absolute;last_sim=absolute
                     self.emit('mission_started',{'backend':'native_airsim','vision':self.vision.device,
-                        'airframe':'x500-research','mass_kg':self.vehicle.mass_kg},0)
+                        'airframe':'x500-research','mass_kg':self.vehicle.mass_kg,
+                        'initial_energy_wh':self.battery.remaining_wh},0)
                 t=absolute-start_sim;dt=max(0,absolute-last_sim);last_sim=absolute
-                pos=np.asarray(self.stats['p']);velocity=np.asarray(self.stats['v']);wind=np.asarray(scenario_wind(t))
-                self.battery.consume(self.vehicle.power_w(float(np.linalg.norm(velocity-wind)),float(velocity[2])),dt)
+                pos=np.asarray(self.stats['p']);velocity=np.asarray(self.stats['v'])
+                weather_t=absolute-self.config.get('scenario_epoch_sim_s',start_sim)
+                wind=np.asarray(scenario_wind(weather_t))
+                power=self.vehicle.power_w(float(np.linalg.norm(velocity-wind)),float(velocity[2])) if self.stats.get('armed') else self.vehicle.electronics_power_w
+                self.battery.consume(power,dt)
                 for command in self.radio.pop_commands():
                     if command['type']=='goal_update':
                         revision=command['data'].get('revision',0);goal=command['data']['position']
@@ -128,6 +141,8 @@ class NativeMission:
                 with self.lock:
                     frame=self.frame;batch=self.batch;camera_received=self.camera_received
                     vision_times=list(self.vision_ms)
+                if not camera_thread.is_alive():raise RuntimeError('Camera worker failed; triggering landing recovery')
+                if frame is None and begin-wall_start>25:raise RuntimeError('No usable camera frame; triggering landing recovery')
                 if frame and frame['frame_id']!=last_ai_frame:
                     self.coverage.update(frame)
                     observed=list(self.mission_inputs['known_obstacles'])
@@ -168,7 +183,7 @@ class NativeMission:
                     stale=(begin-camera_received>.4 or begin-self.stats_received>.25)
                     if stale and decision['phase'] not in ('RETOUR_BASE','POSE'):target=pos.copy()
                     tracks=list(self.ai.perception.tracks.values())
-                    zones=[[*track['position'][:2],1.8] for track in tracks if track['class'] in ('mine','weapon','hostile_unit')]
+                    zones=[[*track['position'][:2],1.8] for track in tracks if track['class'] in ('mine','weapon','hostile_unit') or track.get('classification_uncertain')]
                     usable=max(0.,pos[2]*math.tan(.6)*.75-2.35-.55)
                     speed=min(.9,max(0.,math.sqrt(.45**2+3*usable)-.45))
                     data={'p':target.round(3).tolist(),'phase':decision['phase'],'valid_until':int((absolute+.65)*1000),
@@ -176,7 +191,7 @@ class NativeMission:
                         'speed_limit':round(speed,3),'frame_request_wall_ns':frame['request_wall_ns']}
                     if self.fault_next:data['fault_inject']=True;self.fault_next=False
                     self.control_seq+=1
-                    packet=self.codec.encode(envelope(self.id,self.session,'command',self.control_seq,t,'setpoint',data))
+                    packet=self.codec.encode(envelope(self.id,self.session,'command',self.control_seq,absolute,'setpoint',data))
                     self.socket.sendto(packet,self.destination)
                     request=decision.get('request_delivery')
                     if request and request['request_id'] not in self.served:
@@ -209,7 +224,8 @@ class NativeMission:
                         'tracks':[{**track,'served':track['id'] in self.ai.planner.served} for track in tracks],
                         'airframe_mass_kg':self.vehicle.mass_kg,'vision_device':self.vision.device,'model_domain':'rendered_development'}
                     atomic_json(self.live/'onboard.json',diagnostic)
-                    self.trace.append({'t':t,'p':pos.tolist(),'energy':self.battery.remaining_wh,'phase':decision['phase']})
+                    sample={'t':t,'p':pos.tolist(),'energy':self.battery.remaining_wh,'phase':decision['phase']}
+                    self.trace.append(sample);self.trace_log.write(json.dumps(sample,separators=(',',':'))+'\n')
                     if decision['phase']=='POSE':
                         self.emit('mission_landed',{'deliveries':len(self.served),'at_base':near_base and not self.emergency},t)
                         time.sleep(1);break
@@ -219,7 +235,7 @@ class NativeMission:
             self.running=False;camera_thread.join(timeout=4)
             (self.directory/'trace.json').write_text(json.dumps(clean(self.trace)))
             (self.directory/'observed-ground.json').write_text(json.dumps({**self.coverage.summary(),'cells':self.coverage.cells()}))
-            self.log.close();self.backend.close();self.radio.close();self.socket.close()
+            self.trace_log.close();self.log.close();self.backend.close();self.radio.close();self.socket.close()
 
 
 if __name__=='__main__':

@@ -5,7 +5,7 @@ import math
 import time
 import numpy as np
 from .physics import Vehicle,route_energy
-from .vision import localize,ground_point_visible
+from .vision import localize,ground_point_visible,ground_depth_difference
 
 
 @dataclass
@@ -110,16 +110,18 @@ class PerceptionAgent:
             # Confidence scales differ between the pixel baseline and YOLO.
             # Low-confidence hazards enlarge the map conservatively; casualty
             # selection still requires repeated spatially consistent sightings.
-            minimum=.35 if detection['class'] in ('mine','weapon','hostile_unit') else .40
+            minimum=.35
             if detection["confidence"]<minimum:continue
             p=localize(detection,frame)
             if p is None or not np.all(np.isfinite(p)) or p[2]>2.5:continue
             # All current props/casualties are supported on the coastal surface.
             p[2]=0.
-            matches=[t for t in self.tracks.values() if t["class"]==detection["class"] and np.linalg.norm(np.array(t["position"])[:2]-p[:2])<1.25]
+            people=('injured_person','hostile_unit')
+            matches=[t for t in self.tracks.values() if (t['class']==detection['class'] or
+                t['class'] in people and detection['class'] in people) and np.linalg.norm(np.array(t["position"])[:2]-p[:2])<1.25]
             if matches:
                 track=min(matches,key=lambda t:np.linalg.norm(np.array(t["position"])[:2]-p[:2]))
-                if track.get('invalidated'):track['seen_count']=0
+                if track.get('invalidated'):track['seen_count']=0;track['class_votes']={}
                 track["position"]=(.7*np.array(track["position"])+.3*p).tolist()
                 track["seen_count"]+=1;track["last_seen"]=frame["t"]
                 track['invalidated']=False;track['visible_misses']=0;seen.add(track['id'])
@@ -127,8 +129,21 @@ class PerceptionAgent:
                 identity=f"track-{self.next_id:04}";self.next_id+=1
                 self.tracks[identity]={"id":identity,"class":detection["class"],"position":p.tolist(),
                                        "seen_count":1,"last_seen":frame["t"],"confidence":detection["confidence"]}
+                track=self.tracks[identity]
                 seen.add(identity)
+            if detection['class'] in people:
+                votes=track.setdefault('class_votes',{})
+                votes[detection['class']]=votes.get(detection['class'],0.)+float(detection['confidence'])
+                winner=max(votes,key=votes.get);share=votes[winner]/sum(votes.values())
+                track['class']=winner;track['class_vote_share']=share
+                track['classification_uncertain']=share<.7 or sum(votes.values())<1.
         for identity,track in self.tracks.items():
+            if track['class']=='injured_person':
+                height=ground_depth_difference(track['position'],frame)
+                if height is not None and .075<height<.7:
+                    track['depth_presence_t']=frame['t']
+                    if track['seen_count']>=3:
+                        track['invalidated']=False;track['visible_misses']=0
             if track['class']=='injured_person' and identity not in seen and ground_point_visible(track['position'],frame):
                 track['visible_misses']=track.get('visible_misses',0)+1
                 if track['visible_misses']>=5:track['invalidated']=True
@@ -172,7 +187,7 @@ class PlannerAgent:
         wind=snapshot.get("wind_enu_mps",[0,0,0]);energy=snapshot["battery_wh"]
         circles=[Circle(**c) for c in snapshot.get("obstacle_circles",[])]
         for t in tracks.values():
-            if t["class"] in ("mine","weapon","hostile_unit"):
+            if t["class"] in ("mine","weapon","hostile_unit") or t.get('classification_uncertain'):
                 circles.append(Circle(*t["position"][:2],1.8,"hazard"))
         return_path=astar(pos,base,circles,altitude=self.altitude)
         reserve=self.config.get("reserve_wh",1.)
@@ -197,7 +212,7 @@ class PlannerAgent:
         else:
             candidates=[]
             for t in tracks.values():
-                if t["class"]!="injured_person" or t["seen_count"]<2 or t.get('invalidated') or t["id"] in self.served:continue
+                if t["class"]!="injured_person" or t["seen_count"]<2 or t.get('invalidated') or t.get('classification_uncertain') or t["id"] in self.served:continue
                 p=np.array(t["position"]);p[2]=self.altitude
                 outbound=astar(pos,p,circles,altitude=self.altitude)
                 inbound=astar(p,base,circles,altitude=self.altitude)
@@ -223,7 +238,8 @@ class PlannerAgent:
                 distance=np.linalg.norm(pos[:2]-np.array(t["position"])[:2])
                 if distance<.6:
                     self.phase="LIVRER";path=[pos.tolist(),[*t["position"][:2],2.2]]
-                    fresh=snapshot.get('frame',{}).get('t',t['last_seen'])-t['last_seen']<1.
+                    now=snapshot.get('frame',{}).get('t',t['last_seen'])
+                    fresh=now-t['last_seen']<1. or t['seen_count']>=3 and now-t.get('depth_presence_t',-1e30)<.4
                     if abs(pos[2]-2.2)<.3 and fresh:
                         delivery={"request_id":f"aid-{target}","target_track_id":target}
             else:

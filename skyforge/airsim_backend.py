@@ -90,13 +90,13 @@ class AirSimBackend:
                 self.image_external_argument=False
         return self.camera.call('simGetImages',requests,self.vehicle)
 
-    def frame(self):
-        before=self.state()
+    def frame(self,pose_provider=None):
+        before=self.state() if pose_provider is None else None
         requests=[{'camera_name':'downward','image_type':0,'pixels_as_float':False,'compress':True},
                   {'camera_name':'downward','image_type':1,'pixels_as_float':True,'compress':False}]
         requested=time.monotonic_ns()
         replies=self.images(requests)
-        received=time.monotonic_ns();after=self.state()
+        received=time.monotonic_ns();after=self.state() if pose_provider is None else None
         if len(replies)!=2:raise ValueError('Incomplete RGB/depth response')
         rgb,depth=replies
         image=cv2.imdecode(np.frombuffer(binary_data(rgb['image_data_uint8']),np.uint8),cv2.IMREAD_COLOR)
@@ -109,14 +109,22 @@ class AirSimBackend:
         if image.shape[:2]!=(h,w):values=cv2.resize(values,(image.shape[1],image.shape[0]),interpolation=cv2.INTER_NEAREST)
         rgb_ns=int(rgb['time_stamp']);depth_ns=int(depth['time_stamp'])
         if abs(rgb_ns-depth_ns)>75_000_000:raise ValueError('Unsynchronized RGB/depth')
-        candidates=[before,after];pose=min(candidates,key=lambda p:abs(p['t_ns']-rgb_ns))
-        if abs(pose['t_ns']-rgb_ns)>150_000_000:raise ValueError('Camera/odometry timestamp gap')
+        candidates=sorted(pose_provider() if pose_provider is not None else [before,after],key=lambda p:p['t_ns'])
+        if not candidates:raise ValueError('No odometry available for camera frame')
+        pose=min(candidates,key=lambda p:abs(p['t_ns']-rgb_ns))
+        limit_ns=75_000_000 if pose_provider is not None else 150_000_000
+        if abs(pose['t_ns']-rgb_ns)>limit_ns:raise ValueError('Camera/odometry timestamp gap')
+        left=[p for p in candidates if p['t_ns']<=rgb_ns];right=[p for p in candidates if p['t_ns']>=rgb_ns]
+        before=left[-1] if left else pose;after=right[0] if right else pose
         if after['t_ns']>before['t_ns'] and before['t_ns']<=rgb_ns<=after['t_ns']:
             fraction=(rgb_ns-before['t_ns'])/(after['t_ns']-before['t_ns'])
             q0,q1=before['q'],after['q']
             if q0@q1<0:q1=-q1
             q=(1-fraction)*q0+fraction*q1;q/=np.linalg.norm(q)
             pose={**pose,'p':before['p']*(1-fraction)+after['p']*fraction,'q':q,'t':rgb_ns/1e9,'t_ns':rgb_ns}
+        elif pose_provider is not None:
+            dt=(rgb_ns-pose['t_ns'])/1e9
+            pose={**pose,'p':pose['p']+pose['v']*dt,'t':rgb_ns/1e9,'t_ns':rgb_ns}
         self.frame_id+=1
         return {'frame_id':self.frame_id,'t':rgb_ns/1e9,'wall_ns':received,'request_wall_ns':requested,
                 'image':image,'depth':values,'pose':pose,'camera_id':'downward_rgb'}

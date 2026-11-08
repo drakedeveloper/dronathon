@@ -40,3 +40,17 @@ def test_read_only_images_negotiate_cosys_signature_once():
     assert backend.images([])==['frame']
     assert backend.images([])==['frame']
     assert [len(args) for _,args in calls]==[3,2,2]
+
+
+def test_camera_uses_time_aligned_control_odometry_without_extra_navigation_calls():
+    import cv2
+    backend=AirSimBackend(rpc_factory=RPC)
+    png=cv2.imencode('.png',np.zeros((3,3,3),np.uint8))[1].tobytes()
+    backend.images=lambda _: [{'time_stamp':1_000_000_000,'image_data_uint8':png},
+        {'time_stamp':1_000_000_000,'width':3,'height':3,'image_data_float':[8.]*9}]
+    poses=[{'t':t,'t_ns':int(t*1e9),'p':np.array([t-.98,0.,8.]),'v':np.array([1.,0.,0.]),'q':np.array([0.,0.,0.,1.])} for t in (.98,1.02)]
+    frame=backend.frame(pose_provider=lambda:poses)
+    np.testing.assert_allclose(frame['pose']['p'],[.02,0,8],atol=1e-8)
+    assert not backend.navigation.calls
+    with pytest.raises(ValueError,match='timestamp gap'):
+        backend.frame(pose_provider=lambda:[{**poses[0],'t_ns':1}])

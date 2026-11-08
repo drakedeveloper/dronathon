@@ -45,14 +45,15 @@ for rotor in profile['rotors']:
 area=.35355339*.05+4*math.pi*diameter*.01
 lines += [f' p.linear_drag_coefficient={cppfloat(.045/area)};',' p.angular_drag_coefficient=0.08f;',
           ' p.restitution=0.05f; p.friction=0.6f;','}', '} }']
-header=include/'SkyforgeReference.hpp';header.write_text('\n'.join(lines)+'\n')
-body=target.read_text()
+header=include/'SkyforgeReference.hpp';generated='\n'.join(lines)+'\n'
+if not header.exists() or header.read_text()!=generated:header.write_text(generated)
+original=target.read_text();body=original
 if '#include "vehicles/multirotor/SkyforgeReference.hpp"' not in body:
     body=body.replace('#include "vehicles/multirotor/MultiRotorParams.hpp"',
         '#include "vehicles/multirotor/MultiRotorParams.hpp"\n#include "vehicles/multirotor/SkyforgeReference.hpp"')
 if 'setupFrameGenericQuad(params);' in body:body=body.replace('setupFrameGenericQuad(params);','setupSkyforgeReference(params);')
 elif 'setupSkyforgeReference(params);' not in body:raise ValueError('Upstream setup function changed; review before patching')
-target.write_text(body)
+if body!=original:target.write_text(body)
 manifest={'profile_sha256':hashlib.sha256((ROOT/'configs/airframes/x500-research.json').read_bytes()).hexdigest(),
     'mass_kg':mass,'C_T':ct,'C_P':cp,'expected_max_thrust_per_rotor_n':kt*motor['max_omega_rad_s']**2,
     'limits':['Published simulator mass/inertia plus payload assumptions, not measured hardware',

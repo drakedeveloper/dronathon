@@ -7,7 +7,13 @@ from skyforge.scene import ROOT
 
 
 def evaluate(directory):
-    trace=json.loads((directory/'trace.json').read_text())
+    if (directory/'trace.json').exists():trace=json.loads((directory/'trace.json').read_text())
+    else:
+        lines=(directory/'trace.jsonl').read_text().splitlines();trace=[]
+        for index,line in enumerate(lines):
+            try:trace.append(json.loads(line))
+            except json.JSONDecodeError:
+                if index<len(lines)-1:raise
     scene=json.loads((ROOT/'configs/scenes/coastal-rescue.json').read_text())
     people=[p for p in scene['simulator_and_evaluator_only']['entities'] if p['class']=='injured_person']
     events=[]

@@ -7,6 +7,79 @@ updates; do not end work merely after answering a cleanup/status question.
 
 ## Latest verified checkpoint: 8 November, native AirSim
 
+### ACTIVE DEADLINE / latest steering (supersedes older checkpoints)
+
+User said TWO HOURS LEFT at about03:17 UTC /04:17 Tunis on8 November. Treat
+05:17 UTC /06:17 Tunis as the working cutoff. Priority: stable PDF-compliant
+mission, security and packaging. Additional creative ideas/visual changes are
+deferred. User's friend now owns the three real-image datasets; stop duplicating
+that training. Archives downloaded locally and label formats documented in
+docs/DATASET_TEAM_HANDOFF.md. No Roboflow credentials were requested/stored.
+
+Latest published GitHub is1d3e5a9. New changes after that are not yet pushed.
+
+GPU native V3 training finished (artifacts/native_v3_models). It used700/200/100
+camera positions for70/20/10 split. Found some initial masks blank directly after
+teleport, so old training/val labels were incomplete. Re-captured200development
+views with3paused captures/pose, retained most complete paired RGB/mask. Corrected
+val in data/native-v3-verified: mine45/45TP0FP; weapon37TP4FN0FP; waste89TP2FN0FP;
+casualty49TP21FN2FP; hostile43TP6FN1FP atconf.35. Not blind final test or real-world
+metrics. Final100test views remain uninspected/unscored. No new model training
+currently running. Native training Python is C:/Users/Hamza Trabelsi/AppData/Local/
+SKYFORGE/venv-training (torch2.7.1+cu128); inference separatevenv-native CUDA13.
+
+Native run8d5d59c8:1correct virtual delivery+safe return2.75Wh. Run61600509 showed
+2events but aborted at105s because scenario RPC timedout; parent killed children
+and landed locally, and in-memory trace was lost. DO NOT count it as completed
+mission. Run9a8edd16:1correct delivery+return3.22Wh, got stuck excluding a casualty
+from one low-confidence hostile label. Added temporal person-class voting, lowered
+consistent detector acceptance to.35, empty-ground/depth-presence verification,
+secondary zoom-out atlowaltitude, and finite camera-worker failure recovery.
+New changes need next mission. Native trace now streams JSONL for crash evidence.
+Scenario driver now retries idempotent wind/prop RPC timeouts instead of aborting.
+
+Live fault campaign on9a8edd16 proved autonomy through20soutage, event buffering
+and replay, state CRC hold and duplicate-command rejection. Packet bitflip
+registered auth rejection rather thanCRC (malformedJSON); campaignreportedfalse
+forCRC-specific condition. Injector now flips a revision digit to preserve JSON
+and explicitly hit CRC. Must repeat against next native mission. Full radio
+journal/ACK restart recovery implemented and socket-tested. No encryption claim.
+
+Native p95 stillFAILS, about300-400ms under concurrent cook/link/render load.
+Do not hide this. Camera now reuses independently sampled reflex odometry rather
+than two extra RPC calls. Need idle-laptop/packaged timing measurement. New tests
+include pose interpolation, malformed signed controls/expiryclock, scale bbox,
+radio sender restart/corruption, failed delivery audit and HTTP report isolation.
+Last full Windows suite78passed before newest scenario/threshold changes.
+
+Game C++ binary build succeeded87actions. First packaged cook omitted dynamic
+BP_FlyingPawn; launch crashed. Added explicit /AirSim/Blueprints and /AirSim/Weather
+cook directories (not allSUV/car assets). Second cook failed after simultaneous
+mesh-authoring started a Zen server with another DDC path. ALL Unreal jobs must
+run sequentially with UE-LocalDataCachePath set to LOCALAPPDATA/SKYFORGE/UnrealCache.
+Use scripts/optimize_unreal_meshes.ps1, not bareUnrealEditorCmd. Native simulator
+is currently CLOSED after grounded mission. No renderer is visible right now.
+
+CURRENT RUNNING JOB: exec99177, UnrealEditor-Cmd PID158000, optimizing distance
+LODs for4large coastal scans. Script initiallyneeded explicitload_module
+StaticMeshEditor; nowworking on coastal_cliff_02. Logartifacts/unreal-lods.log.
+CPUprogress~110s at03:54UTC. Wait/fix errors, then package -SkipBuild (successful
+Gamebinaryalreadyexists), then test -Packaged launch, then full native mission
+with latesttracker. Pipeline should improve when millions of distant triangles
+useLODs. No need for more sceneryartwork.
+
+Cache: D:/runtime/unreal/SKYFORGE/Intermediate was safely moved to
+C:/Users/Hamza Trabelsi/AppData/Local/SKYFORGE/UnrealBuildCache/ProjectIntermediate,
+with D: junction, freeing2.48GiB. C~34GiBfree D~4.8GiB atlastcheck. Docker still
+stopped/deletedVHD. Dockerfile/CONTAINER_RUN.md added as UNBUILT recipe; WSLROS2
+deployment is previouslytested, container is not. Don't restartDocker merely
+to claim packagingdone. Real airframe plan and SECURITY.md added with limits.
+
+Next: finishLODs -> sequentialpackageSkipBuild -> launch/flight -> full3delivery
+audit -> livefaults andtiming -> frozen candidate+blindtest -> GitHub/release docs.
+Existing Gazebo three-delivery baseline remains fallback, but sharedtracking
+changes need regression mission. Keep reports honest; source score not victory.
+
 - Custom Cosys-AirSim plugin source build succeeded (85 actions). Original
   procedural coastal Unreal level authored and running visibly, API 41461.
 - Corrected Unreal Python Rotator positional argument mismatch: ground proxy

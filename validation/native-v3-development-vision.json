@@ -1,0 +1,53 @@
+{
+  "domain": "rendered validation scenes, used for development tuning; fresh final test still required",
+  "iou_threshold": 0.5,
+  "counts": {
+    "mine": {
+      "tp": 45,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "injured_person": {
+      "tp": 49,
+      "fp": 2,
+      "fn": 21,
+      "precision": 0.9607843137254902,
+      "recall": 0.7
+    },
+    "weapon": {
+      "tp": 37,
+      "fp": 0,
+      "fn": 4,
+      "precision": 1.0,
+      "recall": 0.9024390243902439
+    },
+    "waste": {
+      "tp": 89,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1.0,
+      "recall": 0.978021978021978
+    },
+    "hostile_unit": {
+      "tp": 43,
+      "fp": 1,
+      "fn": 6,
+      "precision": 0.9772727272727273,
+      "recall": 0.8775510204081632
+    }
+  },
+  "inference_p95_ms": 39.261514999999996,
+  "images": 200,
+  "backend": "onnx",
+  "device": "cuda",
+  "dataset": "data\\native-v3-verified",
+  "models": "artifacts\\native_v3_models",
+  "split": "val",
+  "kind": "both",
+  "confidence": 0.35,
+  "input_size": 512,
+  "primary_size": 512,
+  "scope": "Development validation re-captured with repeated paused RGB/mask pairs; not a blind final test or real-image benchmark"
+}

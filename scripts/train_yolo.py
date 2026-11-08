@@ -44,6 +44,8 @@ if __name__=="__main__":
     parser.add_argument('--dataset',type=Path,default=ROOT/'data/synthetic');parser.add_argument('--tag',default='')
     parser.add_argument('--finetune',action='store_true');parser.add_argument('--output',type=Path,default=ROOT/'models')
     parser.add_argument('--batch',type=int,default=8)
+    parser.add_argument('--workers',type=int,default=0)
+    parser.add_argument('--resume-primary',type=Path)
     args=parser.parse_args()
     if any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_' for c in args.tag):raise ValueError('Invalid run tag')
     import torch
@@ -51,10 +53,11 @@ if __name__=="__main__":
     from ultralytics import YOLO
     for kind in (["primary","secondary"] if args.kind=="both" else [args.kind]):
         config=prepare(kind,args.dataset,args.tag)
-        model=YOLO(str(ROOT/'models'/f'{kind}.pt') if args.finetune else 'yolo11n.pt')
-        model.train(data=str(config),epochs=args.epochs,imgsz=512,batch=args.batch,device=args.device,workers=0,
+        resume=bool(args.resume_primary and kind=='primary')
+        model=YOLO(str(args.resume_primary) if resume else str(ROOT/'models'/f'{kind}.pt') if args.finetune else 'yolo11n.pt')
+        model.train(data=str(config),epochs=args.epochs,imgsz=512,batch=args.batch,device=args.device,workers=args.workers,
                     project=str(ROOT/"artifacts/yolo_runs"),name=kind+args.tag,exist_ok=True,cache=False,plots=False,
-                    patience=12,seed=2026,deterministic=True,degrees=180,flipud=.5,fliplr=.5,
+                    resume=resume,patience=12,seed=2026,deterministic=True,degrees=180,flipud=.5,fliplr=.5,
                     hsv_h=.015,hsv_s=.45,hsv_v=.35,close_mosaic=5,verbose=True)
         weights=ROOT/"artifacts/yolo_runs"/(kind+args.tag)/"weights/best.pt"
         trained=YOLO(str(weights))

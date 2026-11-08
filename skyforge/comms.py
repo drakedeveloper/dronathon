@@ -44,8 +44,53 @@ class RadioClient:
         self.latest={};self.t=0.;self.commands=deque(maxlen=64);self.guard=ReplayGuard()
         self.counters={"crc_rejected":0,"auth_rejected":0,"replay_rejected":0,"overflows":0,"reconnects":0}
         folder=Path(journal_dir);folder.mkdir(parents=True,exist_ok=True)
+        self.checkpoint=folder/'event-ack.packet'
+        self._recover(folder)
         self.journal=(folder/f"radio-{self.session}.jsonl").open("ab",buffering=0)
         self.stop=threading.Event();self.worker=threading.Thread(target=self._run,daemon=True);self.worker.start()
+
+    def _recover(self,folder):
+        journals=sorted((p for p in folder.glob('radio-*.jsonl') if p.stat().st_size),key=lambda p:p.stat().st_mtime_ns)
+        if not journals:return
+        journal=journals[-1];records=[];session=None;sequence=0;offset=0;partial=False
+        with journal.open('rb') as handle:
+            while True:
+                packet=handle.readline(1001)
+                if not packet:break
+                if not packet.endswith(b'\n'):
+                    if handle.read(1):raise PacketError('Oversized recovery journal record')
+                    partial=True;break
+                body=self.codec.decode(packet)
+                if body['mission']!=self.mission or body['stream']!='event':raise PacketError('Recovery journal identity mismatch')
+                if session is None:session=body['session']
+                if body['session']!=session or body['seq']!=sequence+1:raise PacketError('Non-contiguous recovery journal')
+                sequence=body['seq'];records.append((sequence,packet));offset=handle.tell()
+        if session is None:
+            if partial:raise PacketError('No complete event before interrupted journal write')
+            return
+        ack=0
+        if self.checkpoint.exists():
+            saved=self.codec.decode(self.checkpoint.read_bytes())
+            if saved['mission']!=self.mission or saved['session']!=session or saved['type']!='local_event_ack':
+                raise PacketError('Recovery ACK identity mismatch')
+            ack=saved['data'].get('up_to')
+            if type(ack) is not int or not 0<=ack<=sequence:raise PacketError('Invalid recovery ACK')
+        pending=[record for record in records if record[0]>ack]
+        if len(pending)>self.events.maxlen:raise BufferError('Recovered events exceed declared capacity')
+        if partial:
+            # Only an incomplete final append is discarded. Complete records
+            # with invalid authentication fail closed instead of being skipped.
+            with journal.open('r+b') as handle:handle.truncate(offset)
+        self.session=session;self.event_seq=sequence;self.last_ack=ack;self.events.extend(pending)
+        self.counters['recovered_events']=len(pending)
+        self.status_seq=time.time_ns()//1_000_000
+
+    def _persist_ack(self,upto):
+        temporary=self.checkpoint.with_suffix('.tmp')
+        body=envelope(self.mission,self.session,'ack',upto,self.t,'local_event_ack',{'up_to':upto})
+        with temporary.open('wb') as handle:
+            handle.write(self.codec.encode(body));handle.flush();os.fsync(handle.fileno())
+        os.replace(temporary,self.checkpoint)
 
     def publish_status(self,data,t):self.latest=clean(data);self.t=t
 
@@ -94,6 +139,7 @@ class RadioClient:
                                     upto=body["data"].get("up_to",0)
                                     if type(upto) is not int or not self.last_ack<=upto<=self.event_seq:raise PacketError("Invalid ACK")
                                     with self.lock:
+                                        if upto>self.last_ack:self._persist_ack(upto)
                                         while self.events and self.events[0][0]<=upto:self.events.popleft()
                                         self.last_ack=upto
                                 elif body["stream"]=="command":
@@ -173,7 +219,11 @@ class StationRadio:
                                 with self.lock:pending=list(self.pending.values())
                                 for packet in pending:
                                     if self.corrupt_next:
-                                        packet=flip_one_bit(packet,len(packet)//2,0);self.corrupt_next=False
+                                        marker=b'"revision":';index=packet.find(marker)
+                                        # Flip a revision digit to keep JSON well-formed and
+                                        # exercise CRC validation before HMAC rejection.
+                                        index=index+len(marker) if index>=0 else len(packet)//2
+                                        packet=flip_one_bit(packet,index,0);self.corrupt_next=False
                                     connection.sendall(packet)
                                 if self.replay_next and self.last_command:
                                     connection.sendall(self.last_command);self.replay_next=False

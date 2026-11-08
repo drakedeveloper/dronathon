@@ -29,9 +29,23 @@ class NativeMailbox:
     def receive(self,packet):
         try:
             body=self.codec.decode(packet)
-            if body['type']!='setpoint' or not self.guard.accept(body):return False
-            checked_vector(body['data']['p'],3,1000)
-            for zone in body['data'].get('zones',[]):checked_vector(zone,3,1000)
+            if body['type']!='setpoint' or body['stream']!='command':raise PacketError('Invalid control stream')
+            data=body['data'];checked_vector(data['p'],3,1000)
+            if data.get('phase') not in ('INIT','EXPLORER','DETECTER','TRIAGE','NAVIGUER','LIVRER','RETOUR_BASE','POSE'):
+                raise PacketError('Invalid mission phase')
+            expiry=data.get('valid_until')
+            if type(expiry) is not int or not 0<expiry-body['t_sim_ms']<=1000:raise PacketError('Invalid control lifetime')
+            for name,default,upper in [('speed_limit',.9,1.2),('available_wh',1.,2000.)]:
+                value=data.get(name,default)
+                if type(value) not in (int,float) or not math.isfinite(value) or not 0<=value<=upper:raise PacketError('Invalid '+name)
+            for name in ('hold','fault_inject'):
+                if name in data and type(data[name]) is not bool:raise PacketError('Invalid boolean control field')
+            zones=data.get('zones',[])
+            if not isinstance(zones,list) or len(zones)>8:raise PacketError('Invalid hazard list')
+            for zone in zones:
+                checked_vector(zone,3,1000)
+                if not 0<zone[2]<=20:raise PacketError('Invalid hazard radius')
+            if not self.guard.accept(body):return False
             self.goal=body;self.crc=zlib.crc32(canonical(body));self.received_wall=time.monotonic()
             if body['data'].get('fault_inject'):
                 changed=bytearray(struct.pack('d',body['data']['p'][0]));changed[2]^=1

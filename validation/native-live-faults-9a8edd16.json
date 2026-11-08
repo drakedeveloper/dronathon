@@ -1,0 +1,29 @@
+{
+  "mission_id": "native-9a8edd16",
+  "scope": "Live simulated faults; mission outcome is audited separately",
+  "autonomy_advanced": true,
+  "outage_observed": true,
+  "events_buffered_and_replayed": true,
+  "state_crc_hold_observed": true,
+  "packet_corruption_rejected": false,
+  "replay_rejected": true,
+  "injected": [
+    "bitflip_packet",
+    "replay",
+    "state_bitflip"
+  ],
+  "sample_count": 139,
+  "final_security_counters": {
+    "crc_rejected": 0,
+    "auth_rejected": 1,
+    "replay_rejected": 1,
+    "overflows": 0,
+    "reconnects": 40
+  },
+  "final_control_counters": {
+    "reason": "PLANNER_HOLD",
+    "crc_hold_cycles": 1,
+    "bad_packets": 0
+  },
+  "note": "Packet corruption registered auth/malformed rejection, not CRC-specific counter; revised digit injector awaits a new live run."
+}

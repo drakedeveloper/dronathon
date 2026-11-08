@@ -8,7 +8,7 @@ import time
 from urllib.parse import urlsplit
 from skyforge.comms import StationRadio,clean
 from skyforge.physics import predict_payload_offset
-from station.state import read_onboard
+from station.state import read_onboard,read_evaluation
 
 ROOT=Path(__file__).resolve().parents[1]
 DIST=Path(__file__).resolve().parent/"dist"
@@ -35,7 +35,8 @@ class Handler(BaseHTTPRequestHandler):
         path=urlsplit(self.path).path
         if path=="/api/state":
             onboard,stale=read_onboard(LIVE/'onboard.json')
-            return self.respond({"csrf":TOKEN,"onboard":onboard,"onboard_stale":stale,"station":radio.latest,
+            return self.respond({"csrf":TOKEN,"onboard":onboard,"onboard_stale":stale,
+                "evaluation":read_evaluation(LIVE/'report.json',onboard.get('mission_id')),"station":radio.latest,
                 "radio":{"connected":radio.connected and time.monotonic()-radio.last_rx<2,
                          "pending_commands":len(radio.pending),"rejected":radio.rejected,
                          "received_events":radio.received_events,"blackout_seconds":max(0,radio.blackout_until-time.monotonic())},

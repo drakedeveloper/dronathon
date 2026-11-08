@@ -22,19 +22,26 @@ if __name__=='__main__':
         running=False
     signal.signal(signal.SIGINT,stop);signal.signal(signal.SIGTERM,stop)
     with AirSimRPC(port=config['api_port'],timeout=2) as rpc:
-        start=None;last=-1.
+        start=None;last=-1.;errors=0
         while running:
-            state=rpc.call('getMultirotorState','SKYFORGE');absolute=state['timestamp']/1e9
-            if start is None:start=absolute
+            try:state=rpc.call('getMultirotorState','SKYFORGE');absolute=state['timestamp']/1e9
+            except (OSError,ValueError,RuntimeError) as error:
+                errors+=1;print('Scenario odometry retry',errors,type(error).__name__,flush=True);time.sleep(.2);continue
+            if start is None:start=config.get('scenario_epoch_sim_s',absolute)
             t=absolute-start
             if t-last>.15:
                 wind=scenario_wind(t)
-                rpc.call('simSetWind',{'x_val':wind[1],'y_val':wind[0],'z_val':-wind[2]})
+                try:rpc.call('simSetWind',{'x_val':wind[1],'y_val':wind[0],'z_val':-wind[2]})
+                except (OSError,ValueError,RuntimeError) as error:
+                    errors+=1;print('Scenario wind retry',errors,type(error).__name__,flush=True);time.sleep(.2);continue
                 # Oscillating mast replaces the prototype's unbounded moving
                 # column. Only lidar/camera may expose it to mission planning.
                 x=3*math.sin(t*.18);enu=[x,-6,3.5]
-                rpc.call('simSetObjectPose',manifest['moving_obstacle_actor'],{
-                    'position':{'x_val':enu[1],'y_val':enu[0],'z_val':-enu[2]},
-                    'orientation':{'x_val':0.,'y_val':0.,'z_val':0.,'w_val':1.}},True)
+                try:
+                    rpc.call('simSetObjectPose',manifest['moving_obstacle_actor'],{
+                        'position':{'x_val':enu[1],'y_val':enu[0],'z_val':-enu[2]},
+                        'orientation':{'x_val':0.,'y_val':0.,'z_val':0.,'w_val':1.}},True)
+                except (OSError,ValueError,RuntimeError) as error:
+                    errors+=1;print('Scenario obstacle retry',errors,type(error).__name__,flush=True)
                 last=t
             time.sleep(.05)

@@ -11,7 +11,8 @@ import onnxruntime as ort
 
 
 class NeuralVisionSystem:
-    def __init__(self,models_dir,confidence=.35,size=512,primary_size=None,spinning=False,device='cpu'):
+    def __init__(self,models_dir,confidence=.35,size=512,primary_size=None,spinning=False,device='cpu',kinds=('primary','secondary')):
+        if not kinds or any(kind not in ('primary','secondary') for kind in kinds):raise ValueError('Invalid detector selection')
         options=ort.SessionOptions();options.intra_op_num_threads=2;options.inter_op_num_threads=1
         options.execution_mode=ort.ExecutionMode.ORT_SEQUENTIAL
         options.add_session_config_entry('session.intra_op.allow_spinning','1' if spinning else '0')
@@ -31,6 +32,7 @@ class NeuralVisionSystem:
         elif device!='cpu':raise ValueError('Unsupported inference device')
         self.device=device
         for kind,names in (('primary',['waste','mine','weapon']),('secondary',['injured_person','hostile_unit'])):
+            if kind not in kinds:continue
             model_size=self.sizes[kind]
             suffix='-384' if model_size==384 else ''
             session=ort.InferenceSession(str(Path(models_dir)/(kind+suffix+'.onnx')),sess_options=options,providers=providers)
@@ -38,7 +40,7 @@ class NeuralVisionSystem:
             if session.get_inputs()[0].shape[-2:]!=[model_size,model_size]:raise ValueError('Detector input dimensions mismatch')
             self.models.append((kind,names,session))
 
-    def infer(self,image_bgr,frame_meta):
+    def infer(self,image_bgr,frame_meta,secondary_zoom_out=False):
         h,w=image_bgr.shape[:2];inputs={}
         for size in set(self.sizes.values()):
             ratio=min(size/w,size/h);rw,rh=round(w*ratio),round(h*ratio)
@@ -47,10 +49,17 @@ class NeuralVisionSystem:
             canvas[top:top+rh,left:left+rw]=cv2.resize(image_bgr,(rw,rh))
             tensor=np.ascontiguousarray(canvas[:,:,::-1].transpose(2,0,1)[None],dtype=np.float32)/255
             inputs[size]=(tensor,ratio,left,top)
+        secondary_input=None
+        if secondary_zoom_out:
+            size=self.sizes['secondary'];ratio=min(size/w,size/h)*.5
+            rw,rh=round(w*ratio),round(h*ratio);left=(size-rw)//2;top=(size-rh)//2
+            canvas=np.full((size,size,3),114,np.uint8);canvas[top:top+rh,left:left+rw]=cv2.resize(image_bgr,(rw,rh))
+            secondary_input=(np.ascontiguousarray(canvas[:,:,::-1].transpose(2,0,1)[None],dtype=np.float32)/255,ratio,left,top)
         detections=[]
-        futures=[self.pool.submit(session.run,None,{session.get_inputs()[0].name:inputs[self.sizes[kind]][0]}) for kind,_,session in self.models]
+        selected_inputs={kind:secondary_input if kind=='secondary' and secondary_input is not None else inputs[self.sizes[kind]] for kind,_,_ in self.models}
+        futures=[self.pool.submit(session.run,None,{session.get_inputs()[0].name:selected_inputs[kind][0]}) for kind,_,session in self.models]
         for (kind,names,session),future in zip(self.models,futures):
-            _,ratio,left,top=inputs[self.sizes[kind]]
+            _,ratio,left,top=selected_inputs[kind]
             output=future.result()[0]
             rows=output[0].T
             if rows.shape[1]!=4+len(names):raise ValueError('Unexpected ONNX output layout')
