@@ -167,6 +167,7 @@ class NativeReflex:
                           'pose_errors':self.pose_errors,'lidar_errors':self.lidar_errors,
                           'completed_frame_ns':self.completed_frame_ns,'completed_latency_ms':self.completed_latency_ms,
                           'bad_packets':self.mailbox.rejected,'armed':self.armed}
+                    info['collision']=pose.get('collision',{})
                     self.socket.sendto(json.dumps(info,separators=(',',':'),allow_nan=False).encode(),self.stats_destination)
                     last_publish=now
                 time.sleep(max(0,.02-(time.perf_counter_ns()-begin)/1e9))

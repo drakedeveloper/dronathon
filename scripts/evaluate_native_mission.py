@@ -4,6 +4,7 @@ import json
 import math
 from pathlib import Path
 from skyforge.scene import ROOT
+from skyforge.evaluation import evaluate_trace
 
 
 def evaluate(directory):
@@ -31,11 +32,17 @@ def evaluate(directory):
         deliveries.append({'t':t,'position_enu_m':pose['p'],'nearest_casualty':nearest['id'],
                            'horizontal_error_m':distance,'geometrically_valid':accepted})
     last=trace[-1] if trace else None
+    geometry=evaluate_trace(trace,{'entities':scene['simulator_and_evaluator_only']['entities'],
+        'obstacles':scene['simulator_and_evaluator_only']['obstacles'],'base':scene['mission']['base_enu_m']})
+    contacts=sorted({int(p['collision']['time_stamp']) for p in trace if p.get('collision',{}).get('has_collided')
+                     and p.get('collision',{}).get('time_stamp')})
     return {'mission_id':directory.name,'scope':'Independent geometric audit of virtual hover delivery; no physical release proof',
             'virtual_delivery_events':len(deliveries),'unique_geometrically_valid_deliveries':len(valid),
             'deliveries':deliveries,'last_sample':last,
             'returned_to_base':bool(last and last['phase']=='POSE' and math.dist(last['p'][:2],scene['mission']['base_enu_m'][:2])<.6),
-            'all_three_rescued':len(valid)==3}
+            'all_three_rescued':len(valid)==3,'geometry':geometry,'simulator_contact_timestamps':contacts,
+            'safe_mission_geometric_pass':bool(len(valid)==3 and geometry['landed_at_base'] and
+                sum(geometry['zone_entries'].values())==0 and geometry['static_collision_segments']==0)}
 
 
 if __name__=='__main__':

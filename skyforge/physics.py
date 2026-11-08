@@ -1,6 +1,6 @@
 """Explicit SI-unit models; parameters are simulation assumptions until calibrated.
 
-References and limits: docs/PHYSICS_RESEARCH.md. These calculations augment the
+References and limits: README.md physical model/research sections. These calculations augment the
 Gazebo rigid-body/rotor simulation and do not replace its integration.
 """
 from dataclasses import dataclass

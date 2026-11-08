@@ -224,7 +224,8 @@ class NativeMission:
                         'tracks':[{**track,'served':track['id'] in self.ai.planner.served} for track in tracks],
                         'airframe_mass_kg':self.vehicle.mass_kg,'vision_device':self.vision.device,'model_domain':'rendered_development'}
                     atomic_json(self.live/'onboard.json',diagnostic)
-                    sample={'t':t,'p':pos.tolist(),'energy':self.battery.remaining_wh,'phase':decision['phase']}
+                    sample={'t':t,'absolute_t':absolute,'p':pos.tolist(),'energy':self.battery.remaining_wh,
+                            'phase':decision['phase'],'collision':self.stats.get('collision',{})}
                     self.trace.append(sample);self.trace_log.write(json.dumps(sample,separators=(',',':'))+'\n')
                     if decision['phase']=='POSE':
                         self.emit('mission_landed',{'deliveries':len(self.served),'at_base':near_base and not self.emergency},t)
