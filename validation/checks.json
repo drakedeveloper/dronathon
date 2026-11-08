@@ -1,6 +1,6 @@
 {
-  "windows_tests": 46,
-  "linux_tests": 46,
+  "windows_tests": 53,
+  "linux_tests": 53,
   "status": "passed",
   "coverage": [
     "physics",
@@ -10,7 +10,9 @@
     "receiver restart cursor",
     "station snapshot race",
     "protocol schemas",
-    "MessagePack RPC framing"
+    "MessagePack RPC framing",
+    "independent route shield",
+    "depth-checked observed ground"
   ],
   "limits": [
     "Not full mission acceptance",

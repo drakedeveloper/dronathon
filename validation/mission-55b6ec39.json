@@ -1,0 +1,28 @@
+{
+  "samples": 2417,
+  "duration_sim_s": 166.46,
+  "path_length_m": 111.82148375302208,
+  "zone_entries": {
+    "mine_0": 0,
+    "mine_1": 0,
+    "weapon_0": 0,
+    "hostile_unit_0": 0
+  },
+  "zone_occupied_seconds_upper_estimate": 0.0,
+  "minimum_hazard_center_distance_m": {
+    "mine_0": 4.155720673719525,
+    "mine_1": 3.7735919891039056,
+    "weapon_0": 5.615530918739046,
+    "hostile_unit_0": 4.648827639660304
+  },
+  "static_collision_segments": 0,
+  "landed_at_base": true,
+  "final_energy_wh": 5.8025860609849325,
+  "scope": "Swept trace against declared static geometry and hazard cylinders; dynamic contacts and physical payload delivery not certified.",
+  "mission_id": "mission-55b6ec39",
+  "virtual_deliveries": 3,
+  "initial_energy_wh": 15.0,
+  "delivery_mode": "virtual_hover_delivery",
+  "image_receive_to_ai_command_p95_ms": 171.90030205,
+  "shield_enabled": true
+}

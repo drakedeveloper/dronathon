@@ -1,0 +1,21 @@
+{
+  "mode": "physics flight demonstration, no rescue AI",
+  "ground_return_confirmed": true,
+  "samples": 189,
+  "position_ranges_ned_m": {
+    "x_val": [
+      -0.26128700375556946,
+      3.2271230220794678
+    ],
+    "y_val": [
+      -0.18032413721084595,
+      1.293747067451477
+    ],
+    "z_val": [
+      -8.156015396118164,
+      -0.25706177949905396
+    ]
+  },
+  "collision_flag_observed": false,
+  "scope": "Bounded native AirSim physics flight demo; not autonomous rescue integration"
+}

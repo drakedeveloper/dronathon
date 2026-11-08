@@ -15,6 +15,9 @@ from .scene import ROOT
 from .transport import GazeboBus
 from .vision import VisionSystem
 from .planning import MissionAI,Circle,segment_clear
+from .shield import apply_shield
+from .coverage import CoverageGrid
+from .explain import explain_decision
 from .physics import Vehicle,Battery
 from .security import Codec
 from .comms import RadioClient,envelope,load_key,clean
@@ -48,6 +51,7 @@ class Runtime:
         self.log=(self.log_dir/"decisions.jsonl").open("w")
         self.trace=[];self.last_phase=None;self.fault_next=False;self.last_observer_write=0.
         self.emergency=False
+        self.coverage=CoverageGrid();self.coverage_cells=[];self.last_coverage_publish=-1.
         self.reported_tracks={};self.last_checkpoint=-5.
         self.map_obstacles=[{"x":-2.,"y":-2.,"radius":2.15,"kind":"known_static"},
                             {"x":5.,"y":4.,"radius":1.80,"kind":"known_static"}]
@@ -96,6 +100,9 @@ class Runtime:
                         self.emit("goal_update_accepted",{"revision":rev,"position":position},t)
                 elif command["type"]=="state_bitflip":self.fault_next=True;self.emit("state_fault_injected",{},t)
             frame=self.bus.frame()
+            self.coverage.update(frame)
+            if t-self.last_coverage_publish>.5:
+                self.coverage_cells=self.coverage.cells();self.last_coverage_publish=t
             if frame and begin-last_ai_wall>=.15:
                 if frame["frame_id"]!=last_frame:
                     batch=self.vision.infer(frame["image"],{"frame_id":frame["frame_id"],"t_sim_ns":int(frame["t"]*1e9)})
@@ -110,7 +117,9 @@ class Runtime:
                           "battery_wh":self.battery.remaining_wh,"events":self.events[-20:],"supply_count":self.supply_count,
                           "frame":frame,"detections":batch,"snapshot_seq":self.seq,"goal_revision":self.goal_revision,
                           "goal_update":self.goal_update,"map_revision":self.seq,"obstacle_circles":observed,"urgency_observations":self.beacons}
-                ai_start=time.perf_counter_ns();decision=self.ai.step(snapshot);self.ai_times.append((time.perf_counter_ns()-ai_start)/1e6)
+                ai_start=time.perf_counter_ns();decision=self.ai.step(snapshot)
+                decision=apply_shield(snapshot,decision,self.ai.perception.tracks)
+                self.ai_times.append((time.perf_counter_ns()-ai_start)/1e6)
                 self.events=[];last_ai_wall=begin
                 if decision["phase"]!=self.last_phase:
                     self.emit("phase_changed",{"phase":decision["phase"],"reason":decision["decision_code"]},t);self.last_phase=decision["phase"]
@@ -179,7 +188,7 @@ class Runtime:
                     self.emit('mission_checkpoint',{'p':status['p'],'energy':status['energy'],
                         'phase':status['phase'],'served':status['served']},t)
                     self.last_checkpoint=t
-                diagnostic={**status,"mission_id":self.id,"decision":decision["decision_code"],"explanation":"Medical urgency dominates safe travel time. Rescue feasibility includes outbound, delivery, return and reserve.",
+                diagnostic={**status,"mission_id":self.id,'coverage':self.coverage.summary(),'coverage_cells':self.coverage_cells,"decision":decision["decision_code"],"explanation":explain_decision(decision),
                     "wind_speed":float(np.linalg.norm(self.bus.wind)),"ai_p95_ms":float(np.percentile(self.ai_times,95)),
                     "pipeline_p95_ms":float(np.percentile(self.pipeline_times,95)),"control":self.control,
                     "security":dict(self.radio.counters),"route":route,"obstacles":observed,
@@ -191,6 +200,7 @@ class Runtime:
             if t>360:self.emit("mission_timeout",{},t);break
             time.sleep(max(0,.05-(time.monotonic()-begin)))
         (self.log_dir/"trace.json").write_text(json.dumps(clean(self.trace)))
+        (self.log_dir/'observed-ground.json').write_text(json.dumps({**self.coverage.summary(),'cells':self.coverage.cells()},indent=2))
         from .evaluation import evaluate_trace
         scenario=json.loads((ROOT/'sim/generated/coast.json').read_text())
         (self.log_dir/'evaluation.json').write_text(json.dumps(evaluate_trace(self.trace,scenario),indent=2))

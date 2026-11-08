@@ -23,6 +23,16 @@ emergency landed short of base. These failures motivated conservative energy
 budgeting and more directed search. This is not a controlled single-factor
 ablation, and one successful run is not repeatability evidence.
 
+A second run, `55b6ec39`, with the independent route shield enabled, completed
+three virtual deliveries and returned with 5.803 Wh in 166.46 simulated seconds
+over 111.82 m. Its geometric checks also found zero hazard entries/static
+collisions. Receive-to-AI-command p95 was about 172 ms, still above the target.
+
+`airsim-visible-flight.json` records a separate native AirSim physics demo:
+climb to about 8 m, forward/sideways travel, return and ground-confirmed landing.
+It used velocity commands; it did not run the rescue agents. `-Scenic` is an
+explicit camera-teleport preview, a different mode from this physics demo.
+
 ## Vision and communications
 
 Training/development validation uses 70/20 rendered images from two scene seeds,
