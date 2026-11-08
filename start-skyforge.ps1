@@ -7,6 +7,7 @@ $python=Join-Path $env:LOCALAPPDATA 'SKYFORGE\venv-native\Scripts\python.exe'
 if (!(Test-Path -LiteralPath $python)) { throw 'Run scripts/setup_native_runtime.ps1 first' }
 $models=Join-Path $root 'models\native'
 if (!(Test-Path -LiteralPath (Join-Path $models 'secondary.onnx'))) { throw 'Native models absent; restore models/native from the repository' }
+if (Get-NetTCPConnection -LocalPort 8768 -State Listen -ErrorAction SilentlyContinue) { throw 'A station is already running. After landing, run STOP-SKYFORGE.bat before restarting, or open http://127.0.0.1:8768 to view the existing mission.' }
 if ($Editor) { & (Join-Path $root 'scripts\start_native_airsim.ps1') }
 else { & (Join-Path $root 'scripts\start_native_airsim.ps1') -Packaged -Realtime:$Realtime -Offscreen:$Realtime }
 if ($LASTEXITCODE -ne 0) { throw 'Simulator launch failed' }
@@ -19,7 +20,6 @@ while time.monotonic()<deadline:
  time.sleep(.5)
 assert ready,'Simulator API startup timed out'"
 if ($LASTEXITCODE -ne 0) { throw 'Simulator API did not become ready' }
-if (Get-NetTCPConnection -LocalPort 8768 -State Listen -ErrorAction SilentlyContinue) { throw 'A station is already running. Stop the previous mission with Ctrl+C first.' }
 if ($Reset) {
     & $python -c "from skyforge.airsim_rpc import AirSimRPC; import numpy as np; r=AirSimRPC(port=41461); s=r.call('getMultirotorState','SKYFORGE'); v=s['kinematics_estimated']['linear_velocity']; assert s['landed_state']==0 and np.linalg.norm(list(v.values()))<.15,'Reset requires a stationary landed drone'; r.call('reset');r.close()"
     if ($LASTEXITCODE -ne 0) { throw 'Grounded reset refused' }

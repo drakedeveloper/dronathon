@@ -38,3 +38,6 @@ if ($Offscreen) {
     $process = Start-Process -FilePath $engine -ArgumentList $arguments -WorkingDirectory $root -PassThru
 }
 Write-Output "Started native SKYFORGE AirSim PID $($process.Id); API 127.0.0.1:41461; log $log"
+# Start-Process does not set LASTEXITCODE. Return an explicit success status
+# so a fresh PowerShell session cannot mistake a null/stale status for failure.
+exit 0
