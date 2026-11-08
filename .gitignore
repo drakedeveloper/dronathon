@@ -60,3 +60,6 @@ deliverables/previews-final/
 
 # Previous deck is open locally in PowerPoint
 deliverables/SKYFORGE-PITCH-FINAL.pptx
+
+# Presentation is submitted separately and retained locally
+deliverables/*.pptx
