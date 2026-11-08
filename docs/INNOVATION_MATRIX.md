@@ -39,7 +39,9 @@ Gazebo currently runs the integrated rescue AI/control/communication mission.
 AirSim Coastline has native API/camera/physics flight checks and visible demo
 scripts. `-Scenic` explicitly selects an external-physics spectator view; it is
 not an autonomous flight. Native AirSim movement is demonstrated separately.
-The full rescue mission has not yet migrated to AirSim. The proposed Army Base
+Native custom AirSim now runs agents/reflex/radio together, but its first full
+run returned with zero independently valid rescues because of false detections.
+Scene-specific retraining and verification gates are in progress. The proposed Army Base
 Island listing could not be inspected (access denied); price, license, size and
 engine compatibility are not verified. No such asset has been purchased or
 downloaded. Original scene screenshots are not evidence that it is installed.

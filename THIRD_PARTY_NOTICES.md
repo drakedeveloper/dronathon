@@ -25,3 +25,25 @@
 
 Project-specific source has no new general redistribution license declared
 yet. This private repository is for team collaboration and competition review.
+
+Native scene assets are downloaded separately by reproducible scripts:
+
+- Poly Haven coastal_cliff_02, coast_line_02, coast_rocks_03, island_tree_02,
+  aerial_rocks_02, coast_sand_rocks_02 and aerial_grass_rock: CC0-1.0.
+  Source URLs, byte lengths and SHA-256 hashes: sim/assets/cinematic-manifest.json.
+  https://polyhaven.com/license
+- Textured clothed human: MakeHuman-derived CC0 assets packaged by
+  bultodepapas/OpenRCsimulator at commit
+  187182d3cf9f4c53621a5e56320d9351a47248f0. The downloader preserves its human
+  source/license records. Standing-to-prone conversion is our scene authoring.
+  No upstream application code is copied into the flight runtime.
+  https://github.com/bultodepapas/OpenRCsimulator/blob/187182d3cf9f4c53621a5e56320d9351a47248f0/assets/scenery/population/HUMAN_LICENSES.md
+  https://www.makehumancommunity.org/about/license.html
+- Cosys-AirSim 3.5.0 is downloaded and built separately. Preserve upstream
+  plugin/source notices in any packaged simulator distribution.
+  https://github.com/Cosys-Lab/Cosys-AirSim
+- X500 simulator parameters are derived from pinned PX4-gazebo-models SDFs.
+  Source URLs, hashes and modifications are recorded in the reference JSON.
+  https://github.com/PX4/PX4-gazebo-models
+
+No proprietary Call of Duty map or asset is bundled or used in the custom scene.

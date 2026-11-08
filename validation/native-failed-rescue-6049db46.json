@@ -1,0 +1,53 @@
+{
+  "mission_id": "native-6049db46",
+  "scope": "Independent geometric audit of virtual hover delivery; no physical release proof",
+  "virtual_delivery_events": 3,
+  "unique_geometrically_valid_deliveries": 0,
+  "deliveries": [
+    {
+      "t": 38.562,
+      "position_enu_m": [
+        -14.315653324127197,
+        -10.46373462677002,
+        2.1485098075866698
+      ],
+      "nearest_casualty": "injured_person_0",
+      "horizontal_error_m": 9.130781983520308,
+      "geometrically_valid": false
+    },
+    {
+      "t": 64.114,
+      "position_enu_m": [
+        -10.583382368087769,
+        -7.856989502906799,
+        2.147796936035156
+      ],
+      "nearest_casualty": "injured_person_0",
+      "horizontal_error_m": 4.582904997448883,
+      "geometrically_valid": false
+    },
+    {
+      "t": 85.906,
+      "position_enu_m": [
+        -9.394764184951782,
+        -6.995362758636475,
+        2.146910138130188
+      ],
+      "nearest_casualty": "injured_person_0",
+      "horizontal_error_m": 3.117108923358492,
+      "geometrically_valid": false
+    }
+  ],
+  "last_sample": {
+    "t": 112.47239947319031,
+    "p": [
+      -12.02661158517003,
+      -9.025107767432928,
+      0.1921528947353363
+    ],
+    "energy": 7.232526814885164,
+    "phase": "POSE"
+  },
+  "returned_to_base": true,
+  "all_three_rescued": false
+}

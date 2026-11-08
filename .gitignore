@@ -31,3 +31,12 @@ yolo11n.pt
 *.vhdx
 *.dmp
 node_modules/
+sim/assets/coastal_cliff_02/
+sim/assets/coast_line_02/
+sim/assets/coast_rocks_03/
+sim/assets/island_tree_02/
+sim/assets/aerial_rocks_02/
+sim/assets/coast_sand_rocks_02/
+sim/assets/aerial_grass_rock/
+sim/assets/rescue_people/
+*.partial

@@ -1,0 +1,52 @@
+{
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "PhysicsEngineName": "FastPhysicsEngine",
+  "LocalHostIp": "127.0.0.1",
+  "ApiServerPort": 41461,
+  "ClockSpeed": 1,
+  "ViewMode": "FlyWithMe",
+  "SkyforgeScenario": "coastal-rescue",
+  "OriginGeopoint": {"Latitude": 36.8, "Longitude": 10.18, "Altitude": 50},
+  "Vehicles": {
+    "SKYFORGE": {
+      "VehicleType": "SimpleFlight",
+      "DefaultVehicleState": "Disarmed",
+      "AutoCreate": true,
+      "AllowAPIAlways": true,
+      "X": -9, "Y": -12, "Z": -0.32,
+      "Pitch": 0, "Roll": 0, "Yaw": 0,
+      "RC": {"RemoteControlID": -1, "AllowAPIWhenDisconnected": true},
+      "Cameras": {
+        "front_center": {
+          "X": 0.7, "Y": 0, "Z": -0.15, "Pitch": 0, "Roll": 0, "Yaw": 0,
+          "CaptureSettings": [{"ImageType": 0, "Width": 640, "Height": 360, "FOV_Degrees": 90, "MotionBlurAmount": 0}]
+        },
+        "downward": {
+          "X": 0, "Y": 0, "Z": 0.12, "Pitch": -90, "Roll": 0, "Yaw": 0,
+          "CaptureSettings": [
+            {"ImageType": 0, "Width": 512, "Height": 384, "FOV_Degrees": 68.75494, "MotionBlurAmount": 0},
+            {"ImageType": 1, "Width": 256, "Height": 192, "FOV_Degrees": 68.75494},
+            {"ImageType": 5, "Width": 512, "Height": 384, "FOV_Degrees": 68.75494, "MotionBlurAmount": 0}
+          ]
+        }
+      },
+      "Sensors": {
+        "Imu": {"SensorType": 2, "Enabled": true},
+        "Gps": {"SensorType": 3, "Enabled": true},
+        "Barometer": {"SensorType": 1, "Enabled": true},
+        "Magnetometer": {"SensorType": 4, "Enabled": true},
+        "safety_lidar": {
+          "SensorType": 6, "Enabled": true, "NumberOfChannels": 1,
+          "Range": 20, "RotationsPerSecond": 10, "PointsPerSecond": 2400,
+          "X": 0, "Y": 0, "Z": -0.15, "Roll": 0, "Pitch": 0, "Yaw": 0,
+          "VerticalFOVUpper": 0, "VerticalFOVLower": 0,
+          "HorizontalFOVStart": -180, "HorizontalFOVEnd": 180,
+          "DataFrame": "VehicleInertialFrame", "DrawDebugPoints": false
+        }
+      }
+    }
+  },
+  "SegmentationSettings": {"InitMethod": "CommonObjectsRandomIDs", "MeshNamingMethod": "OwnerName", "OverrideExisting": false},
+  "SubWindows": [{"WindowID": 0, "CameraName": "downward", "VehicleName": "SKYFORGE", "ImageType": 0, "Visible": false}]
+}

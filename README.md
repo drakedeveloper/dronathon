@@ -12,25 +12,24 @@ in-progress prototype; the notes below include historical setup milestones.
 
 Prepared 7 November 2026 in `D:\dronathon`. **The official specification has now arrived:** see [official requirements](docs/official-requirements.md). The earlier research notes and competition plan are pre-brief preparation; the PDF takes precedence. This installed baseline does not yet satisfy the full competition architecture.
 
-## Current status — 8 November
+## Current status ? 8 November
 
-We are implementing the complete stack, including both detectors and both
-LangGraph agents. Earlier teammate ownership language is superseded. Current
-readiness estimate is roughly40%, not a completed competition submission.
+The tested Gazebo baseline has completed three virtual deliveries and a return.
+Native AirSim integration is active development. Read [PROJECT_LEDGER.md](PROJECT_LEDGER.md)
+for the durable task record and [native setup and limitations](docs/NATIVE_AIRSIM.md).
 
-- Local station: http://127.0.0.1:8766 — marks stopped snapshots explicitly.
-- Main integrated backend: D-backed WSL, ROS2 Jazzy / Gazebo Harmonic, AMD D3D12
-  on this laptop. `start-mission.ps1` runs the current trained ONNX detectors.
-- Unreal visual backend: official Windows AirSim Coastline is downloaded and
-  extracted on D:. `start-airsim.ps1` opens it; the API/image connection works.
-  The rescue mission is not yet integrated there. See [visual target](docs/VISUAL_TARGET.md).
-- Two YOLO11n models trained/exported. Validation is a small synthetic development
-  set; strong claims about unseen scenes or real-world detection are unwarranted.
-- 36 Linux tests and 5 focused Windows checks passed at latest runs.
-- Recent Gazebo test completed2 virtual deliveries but entered1 hazard zone and
-  did not complete return before we stopped it. Routing/hold fixes are being
-  retested. Physical drop, final latency, fresh holdout and full mission acceptance
-  remain unfinished. See [live work log](docs/WORK_LOG.md).
+- Custom Cosys-AirSim plugin compiled for Unreal 5.8.1; native physical flight
+  and ground-confirmed landing verified with a 2.254 kg reference airframe.
+- Native agents/controller/radio/station run together. The first complete run
+  returned but delivered at false detections: zero independently valid rescues.
+- Native timing about 182 ms p95 still exceeds the 150 ms requirement. GPU
+  inference works; scene-specific models and timing fixes are under evaluation.
+- Original Coastline remains the visual reference. Custom scene includes CC0
+  scans and textured clothed people; it still needs visual refinement.
+- 63 portable unit tests pass. Final native mission, fault campaign, blind
+  evaluation, physical release and deployment package are not complete.
+
+No readiness percentage is a substitute for these acceptance results.
 
 ## Project plan
 

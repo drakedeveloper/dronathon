@@ -1,0 +1,9 @@
+{
+  "backend": "native_cosys_airsim_coastal_rescue",
+  "physics": "FastPhysicsEngine; custom X500 reference",
+  "scope": "Bounded physical flight demonstration, no rescue AI",
+  "ground_return_confirmed": true,
+  "samples": 192,
+  "maximum_height_above_launch_m": 8.084900856018066,
+  "new_collision_timestamps": []
+}

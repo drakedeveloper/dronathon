@@ -2,6 +2,9 @@
 from pathlib import Path
 import hashlib
 import json
+import http.client
+import time
+import subprocess
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1] / 'sim' / 'assets'
@@ -9,8 +12,13 @@ HEADERS = {'User-Agent': 'SKYFORGE-Hackathon/1.0 (local simulation asset setup)'
 
 
 def request(url):
-    with urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=90) as response:
-        return response.read()
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=HEADERS), timeout=90) as response:
+                return response.read()
+        except (OSError,http.client.IncompleteRead):
+            if attempt==2:raise
+            time.sleep(attempt+1)
 
 
 def fetch(asset, relative, metadata):
@@ -19,7 +27,13 @@ def fetch(asset, relative, metadata):
         raise ValueError('Asset path escapes destination')
     target.parent.mkdir(parents=True, exist_ok=True)
     if not target.exists() or hashlib.md5(target.read_bytes()).hexdigest() != metadata['md5']:
-        body = request(metadata['url'])
+        if metadata.get('size',0)>8*1024**2:
+            partial=target.with_suffix(target.suffix+'.partial')
+            command=['curl.exe' if __import__('os').name=='nt' else 'curl','--fail','--location','--silent','--show-error',
+                     '--retry','3','--retry-all-errors','--continue-at','-','--output',str(partial),metadata['url']]
+            subprocess.run(command,check=True)
+            body=partial.read_bytes()
+        else:body = request(metadata['url'])
         if hashlib.md5(body).hexdigest() != metadata['md5']:
             raise ValueError('Asset checksum mismatch: ' + relative)
         target.write_bytes(body)

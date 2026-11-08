@@ -3,20 +3,24 @@ import json
 import math
 from pathlib import Path
 import time
+import argparse
 from skyforge.airsim_rpc import AirSimRPC
+
+parser=argparse.ArgumentParser();parser.add_argument('--port',type=int,default=41451)
+args=parser.parse_args()
 
 vehicle='SKYFORGE';out=Path(__file__).resolve().parents[1]/'artifacts/airsim'
 out.mkdir(parents=True,exist_ok=True);trace=[]
 deadline=time.monotonic()+60
 while True:
     try:
-        with AirSimRPC(timeout=2) as rpc:
+        with AirSimRPC(port=args.port,timeout=2) as rpc:
             if rpc.call('ping'):break
     except (OSError,ValueError):
         if time.monotonic()>deadline:raise TimeoutError('AirSim did not start')
         time.sleep(1)
 
-with AirSimRPC(timeout=4) as rpc:
+with AirSimRPC(port=args.port,timeout=4) as rpc:
     settings=json.loads(rpc.call('getSettingsString'))
     if settings.get('PhysicsEngineName')=='ExternalPhysicsEngine':
         raise RuntimeError('Close scenic preview and launch start-airsim.ps1 without -Scenic')

@@ -5,7 +5,7 @@ import math
 import time
 import numpy as np
 from .physics import Vehicle,route_energy
-from .vision import localize
+from .vision import localize,ground_point_visible
 
 
 @dataclass
@@ -105,6 +105,7 @@ class PerceptionAgent:
         frame=snapshot.get("frame");batch=snapshot.get("detections")
         if frame is None or batch is None or batch["frame_id"]==self.last_frame:return self.tracks
         self.last_frame=batch["frame_id"]
+        seen=set()
         for detection in batch["detections"]:
             # Confidence scales differ between the pixel baseline and YOLO.
             # Low-confidence hazards enlarge the map conservatively; casualty
@@ -118,18 +119,25 @@ class PerceptionAgent:
             matches=[t for t in self.tracks.values() if t["class"]==detection["class"] and np.linalg.norm(np.array(t["position"])[:2]-p[:2])<1.25]
             if matches:
                 track=min(matches,key=lambda t:np.linalg.norm(np.array(t["position"])[:2]-p[:2]))
+                if track.get('invalidated'):track['seen_count']=0
                 track["position"]=(.7*np.array(track["position"])+.3*p).tolist()
                 track["seen_count"]+=1;track["last_seen"]=frame["t"]
+                track['invalidated']=False;track['visible_misses']=0;seen.add(track['id'])
             else:
                 identity=f"track-{self.next_id:04}";self.next_id+=1
                 self.tracks[identity]={"id":identity,"class":detection["class"],"position":p.tolist(),
                                        "seen_count":1,"last_seen":frame["t"],"confidence":detection["confidence"]}
+                seen.add(identity)
+        for identity,track in self.tracks.items():
+            if track['class']=='injured_person' and identity not in seen and ground_point_visible(track['position'],frame):
+                track['visible_misses']=track.get('visible_misses',0)+1
+                if track['visible_misses']>=5:track['invalidated']=True
         return self.tracks
 
 
 class PlannerAgent:
     def __init__(self,config):
-        self.config=config;self.vehicle=Vehicle();self.phase="INIT";self.served=set();self.goal=None
+        self.config=config;self.vehicle=config.get('vehicle',Vehicle());self.phase="INIT";self.served=set();self.goal=None
         self.altitude=float(config.get('survey_altitude_m',8.))
         self.coverage=[]
         # At8 m the ground footprint is ~10.95 x8.21 m (640x480,
@@ -189,7 +197,7 @@ class PlannerAgent:
         else:
             candidates=[]
             for t in tracks.values():
-                if t["class"]!="injured_person" or t["seen_count"]<2 or t["id"] in self.served:continue
+                if t["class"]!="injured_person" or t["seen_count"]<2 or t.get('invalidated') or t["id"] in self.served:continue
                 p=np.array(t["position"]);p[2]=self.altitude
                 outbound=astar(pos,p,circles,altitude=self.altitude)
                 inbound=astar(p,base,circles,altitude=self.altitude)
@@ -215,7 +223,8 @@ class PlannerAgent:
                 distance=np.linalg.norm(pos[:2]-np.array(t["position"])[:2])
                 if distance<.6:
                     self.phase="LIVRER";path=[pos.tolist(),[*t["position"][:2],2.2]]
-                    if abs(pos[2]-2.2)<.3:
+                    fresh=snapshot.get('frame',{}).get('t',t['last_seen'])-t['last_seen']<1.
+                    if abs(pos[2]-2.2)<.3 and fresh:
                         delivery={"request_id":f"aid-{target}","target_track_id":target}
             else:
                 self.phase="EXPLORER"
@@ -235,7 +244,7 @@ class PlannerAgent:
                     for beacon in beacons:
                         p=np.array(beacon['position'],float);p[2]=self.altitude
                         identity=tuple(round(float(v),2) for v in p[:2])
-                        confirmed=any(t['class']=='injured_person' and t['seen_count']>=2
+                        confirmed=any(t['class']=='injured_person' and t['seen_count']>=2 and not t.get('invalidated')
                             and math.dist(t['position'][:2],p[:2])<1.5 for t in tracks.values())
                         if confirmed:self.beacon_inspected.add(identity)
                         if identity in self.beacon_inspected:continue

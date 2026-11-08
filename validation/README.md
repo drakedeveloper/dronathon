@@ -50,3 +50,10 @@ Onboard journal recovery after process death remains unfinished.
 HMAC authenticates packets, CRC detects modeled corruption, and replay counters
 reject duplicates. Encryption, ECC hardware and arbitrary hardware fault
 tolerance are not claimed. Test results are summarized in `checks.json`.
+
+Native AirSim: `native-visible-flight.json` records a bounded physical flight
+and ground-confirmed landing. `native-failed-rescue-6049db46.json` is a failed
+rescue audit: three virtual events, zero correct casualty deliveries, safe
+return. Do not count event totals as rescue success. Native pipeline p95 was
+about 182 ms and does not satisfy the competition deadline. Retraining and
+negative-evidence/fresh-sighting fixes still require mission verification.

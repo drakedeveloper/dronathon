@@ -162,3 +162,21 @@ def localize(detection,frame):
     rotation=rotation_xyzw(frame["pose"]["q"])
     world=frame["pose"]["p"]+rotation@(np.array([0,0,-.12])+pitch@optical_to_camera@p_opt)
     return world
+
+
+def ground_point_visible(position,frame):
+    """Whether a known ground point is in the camera with no depth occlusion.
+
+    Used for negative evidence only: leaving the field of view cannot erase a
+    casualty, while repeatedly observing empty ground can invalidate a track.
+    """
+    if frame.get('pose') is None or frame.get('depth') is None:return False
+    h,w=frame['image'].shape[:2]
+    body=rotation_xyzw(frame['pose']['q']).T@(np.asarray(position)-frame['pose']['p'])-np.array([0,0,-.12])
+    optical=np.array([-body[1],-body[0],-body[2]])
+    if optical[2]<=.1:return False
+    focal=w/(2*np.tan(.6));u=focal*optical[0]/optical[2]+(w-1)/2;v=focal*optical[1]/optical[2]+(h-1)/2
+    if not(12<=u<w-12 and 12<=v<h-12):return False
+    patch=frame['depth'][int(v)-2:int(v)+3,int(u)-2:int(u)+3]
+    valid=patch[np.isfinite(patch)&(patch>0)]
+    return bool(len(valid)>=3 and np.median(valid)>=optical[2]-.6)

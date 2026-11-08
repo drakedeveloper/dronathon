@@ -1,6 +1,7 @@
 """Local-only ground station HTTP UI and independent authenticated radio receiver."""
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 import json
+import os
 from pathlib import Path
 import secrets
 import time
@@ -13,8 +14,8 @@ ROOT=Path(__file__).resolve().parents[1]
 DIST=Path(__file__).resolve().parent/"dist"
 LIVE=ROOT/"artifacts/live"
 TOKEN=secrets.token_urlsafe(24)
-PORT=8766
-radio=StationRadio(state_path=ROOT/'artifacts/station/radio-state.json')
+PORT=int(os.environ.get('SKYFORGE_HTTP_PORT','8766'))
+radio=StationRadio(port=int(os.environ.get('SKYFORGE_RADIO_PORT','8765')),state_path=ROOT/'artifacts/station'/f'radio-state-{PORT}.json')
 
 
 class Handler(BaseHTTPRequestHandler):

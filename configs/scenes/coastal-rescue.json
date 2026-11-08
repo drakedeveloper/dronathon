@@ -1,0 +1,38 @@
+{
+  "name": "SKYFORGE Coastal Evacuation Base",
+  "coordinate_frame": "ENU metres; Unreal conversion is X=north, Y=east, Z=up in centimetres",
+  "mission": {
+    "bounds": [-15, -12, 15, 12],
+    "base_enu_m": [-12, -9, 0.3],
+    "survey_altitude_m": 8,
+    "mission_energy_allowance_wh": 15,
+    "known_obstacles": [
+      {"x": -2, "y": -2, "radius": 2.15, "kind": "known_static"},
+      {"x": 5, "y": 4, "radius": 1.8, "kind": "known_static"}
+    ],
+    "distress_observations": [
+      {"position": [-7, -5, 0], "urgency": 1, "source": "simulated_distress_beacon"},
+      {"position": [9, -3, 0], "urgency": 3, "source": "simulated_distress_beacon"},
+      {"position": [3, 9, 0], "urgency": 2, "source": "simulated_distress_beacon"}
+    ]
+  },
+  "simulator_and_evaluator_only": {
+    "entities": [
+      {"id": "waste_0", "class": "waste", "label": 1, "position": [-8, -2, 0]},
+      {"id": "waste_1", "class": "waste", "label": 1, "position": [10, 6, 0]},
+      {"id": "waste_2", "class": "waste", "label": 1, "position": [0, 9, 0]},
+      {"id": "mine_0", "class": "mine", "label": 2, "position": [1, 0, 0]},
+      {"id": "mine_1", "class": "mine", "label": 2, "position": [7, -7, 0]},
+      {"id": "weapon_0", "class": "weapon", "label": 3, "position": [-7, 6, 0]},
+      {"id": "injured_person_0", "class": "injured_person", "label": 4, "position": [-7, -5, 0]},
+      {"id": "injured_person_1", "class": "injured_person", "label": 4, "position": [9, -3, 0]},
+      {"id": "injured_person_2", "class": "injured_person", "label": 4, "position": [3, 9, 0]},
+      {"id": "hostile_unit_0", "class": "hostile_unit", "label": 5, "position": [10, 9, 0]}
+    ],
+    "obstacles": [
+      {"id": "ruin_a", "center": [-2, -2, 1.5], "size": [3, 3, 3]},
+      {"id": "tower", "center": [5, 4, 4.5], "size": [2.5, 2.5, 9]}
+    ],
+    "note": "Runtime may read only the mission section. Entity truth is restricted to scene generation, annotation and independent evaluation."
+  }
+}

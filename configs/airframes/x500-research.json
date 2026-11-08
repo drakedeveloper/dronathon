@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "name": "SKYFORGE X500-class research rescue reference",
+  "status": "Source-backed simulator reference plus declared payload assumptions; NOT physical-hardware calibrated",
+  "sources": {
+    "base": {
+      "url": "https://raw.githubusercontent.com/PX4/PX4-gazebo-models/e5997f455e33ec071c7c677fc59a65781de496a4/models/x500_base/model.sdf",
+      "sha256": "6eccbff824a0e1ceaaf3bc12fe18cd0eb3ece890bf995a2607b477c3d2ae5772"
+    },
+    "motors": {
+      "url": "https://raw.githubusercontent.com/PX4/PX4-gazebo-models/e5997f455e33ec071c7c677fc59a65781de496a4/models/x500/model.sdf",
+      "sha256": "cb76a4afd439f253a8c516b1fcd3528f80347619cfa46bebb620557054fbf125"
+    }
+  },
+  "upstream_commit": "e5997f455e33ec071c7c677fc59a65781de496a4",
+  "components": [
+    {
+      "id": "base_link",
+      "mass_kg": 2.0,
+      "position_flu_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          0.02166666666666667,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.02166666666666667,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.04000000000000001
+        ]
+      ],
+      "basis": "Published PX4 simulator aggregate, not measured team hardware"
+    },
+    {
+      "id": "rotor_0",
+      "mass_kg": 0.016076923076923075,
+      "position_flu_m": [
+        0.174,
+        -0.174,
+        0.06
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          3.8464910483993325e-07,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.6115851691700804e-05,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          2.649858234714004e-05
+        ]
+      ],
+      "basis": "Published PX4 simulator aggregate, not measured team hardware"
+    },
+    {
+      "id": "rotor_1",
+      "mass_kg": 0.016076923076923075,
+      "position_flu_m": [
+        -0.174,
+        0.174,
+        0.06
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          3.8464910483993325e-07,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.6115851691700804e-05,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          2.649858234714004e-05
+        ]
+      ],
+      "basis": "Published PX4 simulator aggregate, not measured team hardware"
+    },
+    {
+      "id": "rotor_2",
+      "mass_kg": 0.016076923076923075,
+      "position_flu_m": [
+        0.174,
+        0.174,
+        0.06
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          3.8464910483993325e-07,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.6115851691700804e-05,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          2.649858234714004e-05
+        ]
+      ],
+      "basis": "Published PX4 simulator aggregate, not measured team hardware"
+    },
+    {
+      "id": "rotor_3",
+      "mass_kg": 0.016076923076923075,
+      "position_flu_m": [
+        -0.174,
+        -0.174,
+        0.06
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          3.8464910483993325e-07,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          2.6115851691700804e-05,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          2.649858234714004e-05
+        ]
+      ],
+      "basis": "Published PX4 simulator aggregate, not measured team hardware"
+    },
+    {
+      "id": "medical_kits_total",
+      "mass_kg": 0.15,
+      "position_flu_m": [
+        0,
+        0,
+        -0.14
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          0.00029,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.000545,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0007450000000000001
+        ]
+      ],
+      "basis": "Selected design allowance, unmeasured; kits are3x50g simulation payloads"
+    },
+    {
+      "id": "mount",
+      "mass_kg": 0.04,
+      "position_flu_m": [
+        0,
+        0,
+        -0.09
+      ],
+      "inertia_at_own_cg_kg_m2": [
+        [
+          0.00010933333333333331,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.00019333333333333333,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0003
+        ]
+      ],
+      "basis": "Selected design allowance, unmeasured; kits are3x50g simulation payloads"
+    }
+  ],
+  "rotors": [
+    {
+      "id": 0,
+      "position_flu_m": [
+        0.174,
+        -0.174,
+        0.06
+      ],
+      "spin_viewed_from_above": "ccw"
+    },
+    {
+      "id": 1,
+      "position_flu_m": [
+        -0.174,
+        0.174,
+        0.06
+      ],
+      "spin_viewed_from_above": "ccw"
+    },
+    {
+      "id": 2,
+      "position_flu_m": [
+        0.174,
+        0.174,
+        0.06
+      ],
+      "spin_viewed_from_above": "cw"
+    },
+    {
+      "id": 3,
+      "position_flu_m": [
+        -0.174,
+        -0.174,
+        0.06
+      ],
+      "spin_viewed_from_above": "cw"
+    }
+  ],
+  "derived": {
+    "mass_kg": 2.2543076923076915,
+    "cg_flu_m": [
+      0.0,
+      0.0,
+      -0.009200846243090156
+    ],
+    "inertia_about_cg_flu_kg_m2": [
+      [
+        0.02731918627480499,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.02776111108515244,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.04504495371400395
+      ]
+    ],
+    "max_total_thrust_n": 34.19432,
+    "thrust_to_weight": 1.5467499230356268,
+    "hover_omega_rad_s": 804.0627602517374,
+    "hover_rpm": 7678.233771010652
+  },
+  "motor": {
+    "thrust_coefficient_n_per_rad_s_squared": 8.54858e-06,
+    "torque_to_thrust_m": 0.016,
+    "max_omega_rad_s": 1000.0,
+    "time_constant_up_s": 0.0125,
+    "time_constant_down_s": 0.025
+  },
+  "propeller": {
+    "diameter_m": 0.28,
+    "basis": "Selected11-inch-class design assumption; verify against actual purchased propeller"
+  },
+  "atmosphere": {
+    "rho_kg_m3": 1.225,
+    "gravity_m_s2": 9.80665
+  },
+  "battery": {
+    "series_cells": 4,
+    "nominal_voltage_v": 14.8,
+    "capacity_ah": 5.0,
+    "nominal_energy_wh": 74.0,
+    "usable_fraction": 0.8,
+    "mission_energy_allowance_wh": 15.0,
+    "basis": "Selected4S5000mAh pack;15Wh mission allowance is separate from electrical capacity; no sag calibration yet"
+  },
+  "unverified": [
+    "Specific hardware BOM price",
+    "Actual component masses and CG",
+    "Propeller thrust/torque bench curves",
+    "Measured inertia",
+    "Airframe drag/wake",
+    "Battery internal resistance and sag",
+    "Sensor noise/latency",
+    "Rotor acoustic performance"
+  ]
+}

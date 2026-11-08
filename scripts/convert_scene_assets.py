@@ -23,10 +23,14 @@ def convert(path):
         width={'VEC3':3,'VEC2':2,'SCALAR':1}[a['type']]
         return np.frombuffer(buffers[v['buffer']],dtype=dtype,count=a['count']*width,
                              offset=v.get('byteOffset',0)+a.get('byteOffset',0)).reshape(-1,width)
-    lines=[];offset=1
+    lines=['mtllib '+path.stem+'.mtl'];offset=1;materials=[]
     for primitive in data['meshes'][0]['primitives']:
         if primitive.get('mode',4)!=4:raise ValueError('Only triangles supported')
         attrs=primitive['attributes'];p=accessor(attrs['POSITION']);n=accessor(attrs['NORMAL']);uv=accessor(attrs['TEXCOORD_0'])
+        material=data.get('materials',[{}])[primitive.get('material',0)]
+        material_name=material.get('name','surface')
+        lines.append('usemtl '+material_name)
+        if material_name not in [x[0] for x in materials]:materials.append((material_name,material))
         # (x,y,z) glTF -> (x,-z,y) Gazebo, determinant +1.
         for values in p:lines.append('v %.7g %.7g %.7g'%(values[0],-values[2],values[1]))
         for values in uv:lines.append('vt %.7g %.7g'%(values[0],1-values[1]))
@@ -35,6 +39,14 @@ def convert(path):
         for face in indices:lines.append('f '+' '.join(f'{i}/{i}/{i}' for i in face))
         offset+=len(p)
     output=path.with_suffix('.obj');output.write_text('\n'.join(lines))
+    mtl=[]
+    for name,material in materials:
+        mtl.extend(['newmtl '+name,'Kd 1 1 1'])
+        texture=material.get('pbrMetallicRoughness',{}).get('baseColorTexture',{}).get('index')
+        if texture is not None:
+            image=data['images'][data['textures'][texture]['source']]['uri']
+            mtl.append('map_Kd '+image)
+    path.with_suffix('.mtl').write_text('\n'.join(mtl)+'\n')
     print(output.name, 'triangles',sum(s.startswith('f ') for s in lines))
 
 

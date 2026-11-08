@@ -29,6 +29,17 @@ class Vehicle:
     body_cd_area_m2: float = 0.045
     tip_speed_m_s: float = 80.0
 
+    @classmethod
+    def from_reference(cls,path):
+        from .airframe import load_airframe
+        profile=load_airframe(path);motor=profile['motor']
+        return cls(mass_kg=profile['derived']['mass_kg'],rotor_count=len(profile['rotors']),
+            rotor_radius_m=profile['propeller']['diameter_m']/2,
+            thrust_coefficient=motor['thrust_coefficient_n_per_rad_s_squared'],
+            max_omega_rad_s=motor['max_omega_rad_s'],rho_kg_m3=profile['atmosphere']['rho_kg_m3'],
+            gravity_m_s2=profile['atmosphere']['gravity_m_s2'],
+            tip_speed_m_s=motor['max_omega_rad_s']*profile['propeller']['diameter_m']/2)
+
     def __post_init__(self):
         for name, value in self.__dict__.items():
             positive(value, name)

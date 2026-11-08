@@ -1,0 +1,9 @@
+onnxruntime-gpu[cuda,cudnn]==1.31.1
+numpy
+opencv-python==4.13.0.92
+langgraph==1.2.20
+jsonschema
+rich
+msgpack==1.2.4
+pyyaml
+pytest

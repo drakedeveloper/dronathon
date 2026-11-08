@@ -20,7 +20,10 @@ def clean(value):
     return value
 
 
-def load_key(path="/opt/skyforge/radio.key"):
+def load_key(path=None):
+    if path is None:
+        default=Path(__file__).resolve().parents[1]/'runtime/secrets/radio.key' if os.name=='nt' else Path('/opt/skyforge/radio.key')
+        path=os.environ.get('SKYFORGE_RADIO_KEY',str(default))
     p=Path(path);p.parent.mkdir(parents=True,exist_ok=True)
     if not p.exists():
         fd=os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
