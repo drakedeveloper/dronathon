@@ -24,6 +24,12 @@ It keeps flight logic, physics and detector camera dimensions unchanged. Renderi
 can affect image appearance and timing; use the original performance launcher
 for timing comparisons. Quality settings follow [Epic's scalability reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/scalability-reference-for-unreal-engine).
 
+**START-CINEMATIC-PREVIEW.bat** opens the separately installed original Coastline
+environment at 1600x900, capped at 30 FPS. It is a spectator camera preview,
+not the rescue mission or flight evidence. It stops the native demo first to
+avoid running two renderers. Use a mission Start launcher to return to the rescue
+world; the Stop launcher closes either owned environment.
+
 The editable presentation and videos are under `deliverables/`:
 `SKYFORGE-PITCH-EDGE.pptx`, `SKYFORGE-full-mission.mp4` and
 `SKYFORGE-pitch-edited.mp4`. The main deck is timed for ten minutes, including

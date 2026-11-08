@@ -5,12 +5,14 @@ Set-Location -LiteralPath $root
 $python=Join-Path $env:LOCALAPPDATA 'SKYFORGE\venv-native\Scripts\python.exe'
 $packageRoot=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'SKYFORGE\Packaged\'))
 $project=Join-Path $root 'runtime\unreal\SKYFORGE\SKYFORGE.uproject'
+$coastlineRoot=Join-Path $root 'runtime\airsim\Coastline\'
 $modules='-m\s+(scripts\.run_native_mission|station\.server|skyforge\.airsim_(mission|controller|scenario))(\s|$)'
 $all=Get-CimInstance Win32_Process
 $owned=$all | Where-Object {
     ($_.Name -eq 'python.exe' -and $_.ExecutablePath -and $_.ExecutablePath.Equals($python,[StringComparison]::OrdinalIgnoreCase) -and $_.CommandLine -match $modules) -or
     ($_.Name -eq 'SKYFORGE.exe' -and $_.ExecutablePath -and $_.ExecutablePath.StartsWith($packageRoot,[StringComparison]::OrdinalIgnoreCase)) -or
-    ($_.Name -eq 'UnrealEditor.exe' -and $_.CommandLine -and $_.CommandLine.Contains($project))
+    ($_.Name -eq 'UnrealEditor.exe' -and $_.CommandLine -and $_.CommandLine.Contains($project)) -or
+    ($_.Name -eq 'Coastline.exe' -and $_.ExecutablePath -and $_.ExecutablePath.StartsWith($coastlineRoot,[StringComparison]::OrdinalIgnoreCase))
 }
 foreach ($process in $owned) {
     if (Get-Process -Id $process.ProcessId -ErrorAction SilentlyContinue) {
