@@ -1,0 +1,24 @@
+{
+  "mission_id": "native-32c7c474",
+  "scope": "Live simulated faults; mission outcome is audited separately",
+  "autonomy_advanced": true,
+  "outage_observed": true,
+  "events_buffered_and_replayed": true,
+  "state_crc_hold_observed": true,
+  "packet_corruption_rejected": true,
+  "replay_rejected": true,
+  "injected": [
+    "bitflip_packet",
+    "replay",
+    "state_bitflip"
+  ],
+  "observed_backlog_peak": 9,
+  "final_security_counters": {
+    "crc_rejected": 1,
+    "auth_rejected": 0,
+    "replay_rejected": 1,
+    "overflows": 0,
+    "reconnects": 40
+  },
+  "evidence_note": "Recomputed from retained actual samples: pending reached8, then0 after reconnect; a newly generated final checkpoint was still awaiting ACK."
+}

@@ -34,7 +34,11 @@ last=samples[-1];peak=max(s['pending_events'] or 0 for s in samples)
 report={'mission_id':mission,'scope':'Live simulated faults; mission outcome is audited separately',
     'autonomy_advanced':last['sim_s']>initial['onboard']['t']+1,
     'outage_observed':any(not s['radio']['connected'] for s in samples[:60]),
-    'events_buffered_and_replayed':peak>0 and last['pending_events']==0 and last['radio']['received_events']>initial['radio']['received_events'],
+    # A new checkpoint may be awaiting ACK at the last sample. Require an
+    # actually observed drained backlog after reconnect, not an arbitrary
+    # final instant with no newly generated events in flight.
+    'events_buffered_and_replayed':peak>0 and any(s['wall_s']>20 and s['radio']['connected'] and s['pending_events']==0
+        and s['radio']['received_events']>initial['radio']['received_events'] for s in samples),
     'state_crc_hold_observed':max(s['control'].get('crc_hold_cycles') or 0 for s in samples)>initial['onboard'].get('control',{}).get('crc_hold_cycles',0),
     'packet_corruption_rejected':sum(last['security'].get(k,0) for k in ('crc_rejected','auth_rejected'))>
         sum(initial['onboard'].get('security',{}).get(k,0) for k in ('crc_rejected','auth_rejected')),

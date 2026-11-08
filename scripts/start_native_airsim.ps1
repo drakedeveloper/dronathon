@@ -6,7 +6,7 @@ $project = Join-Path $root 'runtime\unreal\SKYFORGE\SKYFORGE.uproject'
 $settings = Join-Path $root 'configs\airsim-native-settings.json'
 $packagedExe=Join-Path $env:LOCALAPPDATA 'SKYFORGE\Packaged\Windows\SKYFORGE.exe'
 if ($Packaged -and !(Test-Path -LiteralPath $packagedExe)) { throw 'Complete package_native_airsim.ps1 first' }
-if (!(Test-Path -LiteralPath $engine) -or !(Test-Path -LiteralPath $project)) {
+if (!$Packaged -and (!(Test-Path -LiteralPath $engine) -or !(Test-Path -LiteralPath $project))) {
     throw 'Build the native Unreal project before launching it.'
 }
 $existing = Get-NetTCPConnection -LocalPort 41461 -State Listen -ErrorAction SilentlyContinue

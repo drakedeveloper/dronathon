@@ -21,7 +21,7 @@ from skyforge.scene import ROOT
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--device',choices=['cpu','cuda'],default='cuda')
-    parser.add_argument('--models',type=Path,default=ROOT/'models')
+    parser.add_argument('--models',type=Path,default=ROOT/'models/native')
     parser.add_argument('--exit-on-complete',action='store_true',help='Stop station after an automated campaign run')
     parser.add_argument('--energy-wh',type=float,default=15.,help='Declared mission stress allowance; cannot exceed reference usable battery energy')
     args=parser.parse_args()
@@ -48,13 +48,15 @@ def main():
     folder=ROOT/'artifacts/native';folder.mkdir(parents=True,exist_ok=True)
     control=ROOT/'runtime/secrets/native-control.key';load_key(control)
     radio=ROOT/'runtime/secrets/native-radio.key';load_key(radio)
+    scene_manifest=ROOT/'runtime/unreal/SKYFORGE/scene-manifest.json'
+    if not scene_manifest.exists():scene_manifest=ROOT/'configs/scenes/native-scene-manifest.json'
     config={'api_port':41461,'translation_enu':translation,'base_enu_m':base,
             'scenario_epoch_sim_s':second['t'],
             'home_body_z':base[2],'control_key':str(control),'command_port':42101,
             'stats_port':42102,'radio_port':8767,'vision_device':args.device,
             'models_dir':str(args.models.resolve()),
             'mission_energy_allowance_wh':args.energy_wh,'reference_usable_energy_wh':usable_energy,
-            'scene_manifest':str(ROOT/'runtime/unreal/SKYFORGE/scene-manifest.json'),
+            'scene_manifest':str(scene_manifest),
             'max_mission_seconds':360}
     config_path=folder/'config.json';config_path.write_text(json.dumps(config,indent=2))
     env={**os.environ,'SKYFORGE_HTTP_PORT':'8768','SKYFORGE_RADIO_PORT':'8767',

@@ -1,0 +1,52 @@
+{
+  "status": "Native three-delivery geometric acceptance passed; real-image and held-out vision evaluation pending",
+  "domain": "authored Unreal development scene",
+  "preprocessing": "RGB float32 NCHW 0..1 letterbox 512, optional half-scale secondary at altitude below4m",
+  "models": [
+    {
+      "name": "primary",
+      "file": "primary.onnx",
+      "sha256": "dd47d503c5c0ca1819555e5a75c07dacd3c54af8bb67c465c3c874f91358ed23",
+      "classes": [
+        "waste",
+        "mine",
+        "weapon"
+      ],
+      "input": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "output": [
+        1,
+        7,
+        5376
+      ]
+    },
+    {
+      "name": "secondary",
+      "file": "secondary.onnx",
+      "sha256": "fdedbe1b58f52a25d9f3ce8071a23c4582262880e4217976fa9245c642140629",
+      "classes": [
+        "injured_person",
+        "hostile_unit"
+      ],
+      "input": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "output": [
+        1,
+        6,
+        5376
+      ]
+    }
+  ],
+  "acceptance_mission": "native-32c7c474",
+  "minimum_confidence": 0.35,
+  "mission_energy_allowance_wh": 20,
+  "precision": "float32"
+}

@@ -45,6 +45,7 @@ class Handler(BaseHTTPRequestHandler):
             p=LIVE/path[1:]
             try:content=p.read_bytes()
             except FileNotFoundError:return self.respond(b"",404,kind="image/jpeg")
+            except PermissionError:return self.respond(b"",503,kind="image/jpeg")
             return self.respond(content,kind="image/jpeg")
         if path=="/":return self.respond((DIST/"index.html").read_bytes(),kind="text/html; charset=utf-8")
         return self.respond({"error":"not found"},404)

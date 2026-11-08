@@ -1,6 +1,6 @@
 {
-  "windows_tests": 53,
-  "linux_tests": 53,
+  "windows_tests": 79,
+  "linux_tests": 64,
   "status": "passed",
   "coverage": [
     "physics",
@@ -18,5 +18,6 @@
     "Not full mission acceptance",
     "No fresh blind vision test",
     "No complete capture-to-motor deadline proof"
-  ]
+  ],
+  "checkpoint": "2026-11-08; Linux checkpoint predates latest native-only/UI changes"
 }

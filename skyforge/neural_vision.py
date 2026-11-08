@@ -57,7 +57,12 @@ class NeuralVisionSystem:
             secondary_input=(np.ascontiguousarray(canvas[:,:,::-1].transpose(2,0,1)[None],dtype=np.float32)/255,ratio,left,top)
         detections=[]
         selected_inputs={kind:secondary_input if kind=='secondary' and secondary_input is not None else inputs[self.sizes[kind]] for kind,_,_ in self.models}
-        futures=[self.pool.submit(session.run,None,{session.get_inputs()[0].name:selected_inputs[kind][0]}) for kind,_,session in self.models]
+        futures=[]
+        for kind,_,session in self.models:
+            metadata=session.get_inputs()[0]
+            dtype=np.float16 if getattr(metadata,'type','tensor(float)')=='tensor(float16)' else np.float32
+            tensor=selected_inputs[kind][0].astype(dtype,copy=False)
+            futures.append(self.pool.submit(session.run,None,{metadata.name:tensor}))
         for (kind,names,session),future in zip(self.models,futures):
             _,ratio,left,top=selected_inputs[kind]
             output=future.result()[0]

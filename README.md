@@ -14,14 +14,14 @@ These are the measured results at this guide's checkpoint; update them from
 |---|---|
 | Gazebo mission | Recorded three virtual deliveries and safe returns, independently checked against static geometry/hazards |
 | Native AirSim flight | Physical takeoff to about8 m, travel, return and ground-confirmed disarm verified |
-| Native rescue | One independently correct delivery and return verified. A two-event run aborted. Full three-rescue native acceptance pending |
+| Native rescue | native-32c7c474: three independently correct virtual deliveries, return and ground-confirmed landing; zero declared hazard entries/static collision segments/contact timestamps; 20 Wh allowance, 9.365 Wh remaining |
 | Native vision | GPU inference and corrected development validation below. Final blind and real-image evaluation are separate |
 | Radio/security | Socket outage/replay/corruption and sender/receiver restart tests; actual outage buffered/replayed events and state-bitflip hold observed |
 | Timing | Reflex/decision instrumentation exists. Native full pipeline measured above150 ms under load: NOT compliant yet |
-| Standalone package | Game binary compiled. Cook/launch correction in progress after a missing dynamically loaded drone blueprint |
+| Standalone package | Cook and launch verified; packaged native-32c7c474 completed three accurate deliveries and returned. A live scalability experiment crashed the simulator; keep the verified rendering settings |
 | ROS2 | Jazzy/Harmonic ran in D-backed WSL. Dockerfile exists but container image is unbuilt/untested |
 | Hardware | Source-backed mass/inertia/rotors, not measured real-hardware calibration |
-| Tests |78 Windows tests passed at latest source checkpoint; tests alone do not establish mission acceptance |
+| Tests |79 Windows tests passed at latest source checkpoint; tests alone do not establish mission acceptance |
 
 Failed evidence is retained. A smooth video, spectator teleport or delivery
 event count is not a successful rescue. The independent evaluator must check
@@ -269,7 +269,10 @@ secure boot, ECC hardware, arbitrary bit-flip tolerance or jamming certification
 Live evidence showed autonomous time advance, actual event buffering/replay,
 state CRC hold and replay rejection. The first packet-flip corrupted JSON and
 incremented auth/malformed rejection instead of CRC. Revised injection flips a
-revision digit; a new explicit CRC live test is pending. Socket tests cover both.
+revision digit; native-db4fadf2 recorded one explicit CRC rejection and one replay
+rejection. Its backlog reached eight events and drained after reconnect. The
+fault checker now checks a drained backlog after reconnect rather than requiring
+zero newly generated events at one arbitrary final instant.
 
 ## 8. Scene, simulation and data isolation
 
@@ -296,18 +299,35 @@ Only one renderer and no training/build job should run during timing acceptance.
 Ryzen5 7535HS,16 GB RAM, RTX2050 4 GB. The remote RTX5060 computer is not in scope.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/start_native_airsim.ps1
-& "$env:LOCALAPPDATA\SKYFORGE\venv-native\Scripts\python.exe" -m scripts.run_native_mission --device cuda --models artifacts/native_v3_models
+powershell -ExecutionPolicy Bypass -File start-skyforge.ps1
 ```
 
 Station: http://127.0.0.1:8768. After normal completion it stays for review;
 Ctrl+C closes owned services. --exit-on-complete is for unattended campaigns.
---energy-wh15 is the stress allowance. Start grounded on the declared pad.
+The launcher declares a 20 Wh mission allowance, within the reference battery's
+59.2 Wh usable capacity. `-EnergyWh 15` repeats the tighter stress case that
+returned after two deliveries; changing this allowance is not a safety-margin
+reduction or evidence that the 15 Wh three-delivery test passed.
+Start grounded on the declared pad.
 A reset is test setup, not an autonomous return.
 
-Add -Packaged to the simulator launcher only after package acceptance. Output:
+The one-click launcher selects the successfully cooked package. Output:
 %LOCALAPPDATA%/SKYFORGE/Packaged/Windows. Otherwise the installed editor is needed.
-Native candidates are local artifacts until frozen release promotion.
+The accepted float32 native model pair is committed under `models/native/` with
+hashes and acceptance identity. Root `models/` retains the separate Gazebo pair.
+
+The redesigned station implements the first creative pair: **Living Tactical
+Map + Explainable Mission Brain**. Coverage is depth-checked; unknown cells stay
+dark. Layers toggle independently, track symbols distinguish classes, old tracks
+fade, and the observation register shows model confidence, age and classification
+uncertainty. Planned route and flown trail remain separate. Decisions and reasons
+come from the actual deterministic agents. Stale snapshots and timing failures
+are explicit. These views are local diagnostic taps, not sub-1 KB radio packets.
+UI publication is limited to 5 Hz while flight/trace processing retains its
+50 Hz loop target. Design references: [QGroundControl flight view](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/ui_overview.html)
+and [USWDS visualization guidance](https://designsystem.digital.gov/components/data-visualizations/).
+JavaScript syntax and a real-snapshot DOM/canvas smoke check passed. Native UI
+automation is unavailable in this session, so visual browser inspection is pending.
 
 Preserved ROS2/Gazebo path, with matching Gazebo models:
 
@@ -369,12 +389,16 @@ Docker Desktop host networking needs separate supported configuration.
 
 ## 11. Creative work — two at a time
 
-First finish mission acceptance. User's selected next pair:
+The first implemented pair:
 
 1. Living Tactical Map: actual observed ground, tracks, routes/exclusions, freshness/uncertainty and decision context. Geometric coverage is not proof every person was found.
-2. Second-chance perception: deliberate safe viewpoint/altitude revisits for uncertain detections. Repeated tracking/depth checks exist; general viewpoint planning remains pending.
+2. Explainable Mission Brain: actual deterministic decision codes, evidence and an authenticated event journal, exposed clearly in the new station.
 
-Dashboard design will use professional flight-operations hierarchy and readable,
+Next pair after timing/package freeze: second-chance perception (safe viewpoint
+revisits) and radio-shadow memory. Repeated tracking/depth checks already exist;
+general viewpoint planning and learned radio coverage remain pending.
+
+Dashboard design uses professional flight-operations hierarchy and readable,
 accessible symbols. Show stale/unknown data and failed timing honestly, never
 decorative synthetic status. References: [QGroundControl](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/ui_overview.html), [USWDS visualization guidance](https://designsystem.digital.gov/components/data-visualizations/).
 

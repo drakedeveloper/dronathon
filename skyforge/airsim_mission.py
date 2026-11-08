@@ -73,6 +73,7 @@ class NativeMission:
         self.log=(self.directory/'decisions.jsonl').open('w');self.fault_next=False;self.goal_revision=0;self.goal_update=None
         self.trace_log=(self.directory/'trace.jsonl').open('a',buffering=1)
         self.last_phase=None;self.last_checkpoint=-5.;self.emergency=False;self.last_coverage=-1.;self.coverage_cells=[]
+        self.last_ui=-1.;self.last_camera_ui=0.
 
     def cameras(self):
         while self.running:
@@ -163,7 +164,9 @@ class NativeMission:
                     for detection in batch['detections']:
                         x0,y0,x1,y1=map(int,detection['bbox_xyxy']);cv2.rectangle(overlay,(x0,y0),(x1,y1),(60,210,255),2)
                         cv2.putText(overlay,detection['class'],(x0,max(12,y0-4)),cv2.FONT_HERSHEY_SIMPLEX,.35,(40,245,255),1)
-                    temporary=self.live/'camera.tmp.jpg';cv2.imwrite(str(temporary),overlay,[cv2.IMWRITE_JPEG_QUALITY,82]);replace_live(temporary,self.live/'camera.jpg')
+                    if begin-self.last_camera_ui>=.2:
+                        temporary=self.live/'camera.tmp.jpg';cv2.imwrite(str(temporary),overlay,[cv2.IMWRITE_JPEG_QUALITY,82]);replace_live(temporary,self.live/'camera.jpg')
+                        self.last_camera_ui=begin
                 if decision:
                     base=np.asarray(self.config['base_enu_m']);near_base=np.linalg.norm(pos[:2]-base[:2])<.6
                     if self.battery.remaining_wh<.8 and not self.emergency:
@@ -206,24 +209,27 @@ class NativeMission:
                         if track['id'] not in self.reported and track['seen_count']>=2:
                             self.emit('object_detected',{'id':track['id'],'class':track['class'],'p':np.round(track['position'],2).tolist()},t);self.reported.add(track['id'])
                     if t-self.last_coverage>.5:self.coverage_cells=self.coverage.cells();self.last_coverage=t
-                    detail=decision['decision_details']
-                    status={'t':round(t,2),'phase':decision['phase'],'p':pos.round(3).tolist(),'energy':round(self.battery.remaining_wh,3),
-                        'return_threshold':detail.get('return_threshold_wh'),'served':len(self.served),'pending_events':len(self.radio.events),
-                        'goal_revision':self.goal_revision}
-                    self.radio.publish_status(status,t)
-                    if t-self.last_checkpoint>5:
-                        self.emit('mission_checkpoint',{'p':status['p'],'energy':status['energy'],'phase':status['phase'],'served':status['served']},t);self.last_checkpoint=t
-                    diagnostic={**status,'mission_id':self.id,'backend':'native_airsim','decision':decision['decision_code'],
-                        'explanation':explain_decision(decision),'wind_speed':float(np.linalg.norm(wind)),
-                        'ai_p95_ms':float(np.percentile(self.ai_ms,95)) if self.ai_ms else 0.,
-                        'vision_p95_ms':float(np.percentile(vision_times,95)) if vision_times else 0.,
-                        'pipeline_p95_ms':float(np.percentile(self.pipeline_ms,95)) if self.pipeline_ms else None,
-                        'pipeline_scope':'camera request to completed velocity RPC; conservative completion upper bound',
-                        'control':self.stats,'security':dict(self.radio.counters),'route':route,'obstacles':observed,
-                        'coverage':self.coverage.summary(),'coverage_cells':self.coverage_cells,'camera_errors':self.camera_errors,
-                        'tracks':[{**track,'served':track['id'] in self.ai.planner.served} for track in tracks],
-                        'airframe_mass_kg':self.vehicle.mass_kg,'vision_device':self.vision.device,'model_domain':'rendered_development'}
-                    atomic_json(self.live/'onboard.json',diagnostic)
+                    # UI/radio diagnostics run at 5 Hz; flight and trace retain 50 Hz.
+                    if begin-self.last_ui>=.2 or decision['phase']=='POSE':
+                        detail=decision['decision_details']
+                        status={'t':round(t,2),'phase':decision['phase'],'p':pos.round(3).tolist(),'energy':round(self.battery.remaining_wh,3),
+                            'return_threshold':detail.get('return_threshold_wh'),'served':len(self.served),'pending_events':len(self.radio.events),
+                            'goal_revision':self.goal_revision}
+                        self.radio.publish_status(status,t)
+                        if t-self.last_checkpoint>5:
+                            self.emit('mission_checkpoint',{'p':status['p'],'energy':status['energy'],'phase':status['phase'],'served':status['served']},t);self.last_checkpoint=t
+                        diagnostic={**status,'mission_id':self.id,'backend':'native_airsim','decision':decision['decision_code'],
+                            'explanation':explain_decision(decision),'wind_speed':float(np.linalg.norm(wind)),
+                            'ai_p95_ms':float(np.percentile(self.ai_ms,95)) if self.ai_ms else 0.,
+                            'vision_p95_ms':float(np.percentile(vision_times,95)) if vision_times else 0.,
+                            'pipeline_p95_ms':float(np.percentile(self.pipeline_ms,95)) if self.pipeline_ms else None,
+                            'pipeline_scope':'camera request to completed velocity RPC; conservative completion upper bound',
+                            'control':self.stats,'security':dict(self.radio.counters),'route':route,'obstacles':observed,
+                            'coverage':self.coverage.summary(),'coverage_cells':self.coverage_cells,'camera_errors':self.camera_errors,
+                            'tracks':[{**track,'served':track['id'] in self.ai.planner.served} for track in tracks],
+                            'airframe_mass_kg':self.vehicle.mass_kg,'vision_device':self.vision.device,'model_domain':'rendered_development'}
+                        atomic_json(self.live/'onboard.json',diagnostic)
+                        self.last_ui=begin
                     sample={'t':t,'absolute_t':absolute,'p':pos.tolist(),'energy':self.battery.remaining_wh,
                             'phase':decision['phase'],'collision':self.stats.get('collision',{})}
                     self.trace.append(sample);self.trace_log.write(json.dumps(sample,separators=(',',':'))+'\n')
