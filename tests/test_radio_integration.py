@@ -10,6 +10,26 @@ def until(predicate,seconds=5):
     return False
 
 
+def test_station_restart_preserves_acknowledged_event_cursor(tmp_path):
+    key=b'test-radio-integrity-key-32bytes!!'
+    checkpoint=tmp_path/'station-state.json'
+    station=StationRadio(port=0,key=key,state_path=checkpoint)
+    port=station.port
+    client=RadioClient('restart',tmp_path/'journal',port=port,key=key)
+    try:
+        client.publish_status({'t':1},1)
+        client.event('detected',{'target':'before_restart'},1)
+        assert until(lambda:client.last_ack==1)
+        station.close()
+        station=StationRadio(port=port,key=key,state_path=checkpoint)
+        client.event('detected',{'target':'after_restart'},2)
+        assert until(lambda:client.last_ack==2)
+        assert station.received_events==2
+        assert [body['data']['target'] for body in station.history]==['before_restart','after_restart']
+    finally:
+        client.close();station.close()
+
+
 def test_real_socket_outage_replay_and_no_duplicate_events(tmp_path):
     key=b"test-radio-integrity-key-32bytes!!"
     station=StationRadio(port=0,key=key)

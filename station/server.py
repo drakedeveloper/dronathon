@@ -7,13 +7,14 @@ import time
 from urllib.parse import urlsplit
 from skyforge.comms import StationRadio,clean
 from skyforge.physics import predict_payload_offset
+from station.state import read_onboard
 
 ROOT=Path(__file__).resolve().parents[1]
 DIST=Path(__file__).resolve().parent/"dist"
 LIVE=ROOT/"artifacts/live"
 TOKEN=secrets.token_urlsafe(24)
 PORT=8766
-radio=StationRadio()
+radio=StationRadio(state_path=ROOT/'artifacts/station/radio-state.json')
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -32,9 +33,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.respond({"error":"host rejected"},403)
         path=urlsplit(self.path).path
         if path=="/api/state":
-            try:onboard=json.loads((LIVE/"onboard.json").read_text())
-            except (FileNotFoundError,json.JSONDecodeError):onboard={"phase":"WAITING","t":0}
-            stale=not (LIVE/"onboard.json").exists() or time.time()-(LIVE/"onboard.json").stat().st_mtime>3
+            onboard,stale=read_onboard(LIVE/'onboard.json')
             return self.respond({"csrf":TOKEN,"onboard":onboard,"onboard_stale":stale,"station":radio.latest,
                 "radio":{"connected":radio.connected and time.monotonic()-radio.last_rx<2,
                          "pending_commands":len(radio.pending),"rejected":radio.rejected,
@@ -42,8 +41,9 @@ class Handler(BaseHTTPRequestHandler):
                 "events":list(radio.history)[-35:]})
         if path in ("/camera.jpg","/observer.jpg"):
             p=LIVE/path[1:]
-            if p.exists():return self.respond(p.read_bytes(),kind="image/jpeg")
-            return self.respond(b"",404,kind="image/jpeg")
+            try:content=p.read_bytes()
+            except FileNotFoundError:return self.respond(b"",404,kind="image/jpeg")
+            return self.respond(content,kind="image/jpeg")
         if path=="/":return self.respond((DIST/"index.html").read_bytes(),kind="text/html; charset=utf-8")
         return self.respond({"error":"not found"},404)
 

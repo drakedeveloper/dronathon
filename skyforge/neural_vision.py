@@ -11,27 +11,36 @@ import onnxruntime as ort
 
 
 class NeuralVisionSystem:
-    def __init__(self,models_dir,confidence=.35,size=512):
+    def __init__(self,models_dir,confidence=.35,size=512,primary_size=None,spinning=False):
         options=ort.SessionOptions();options.intra_op_num_threads=2;options.inter_op_num_threads=1
         options.execution_mode=ort.ExecutionMode.ORT_SEQUENTIAL
+        options.add_session_config_entry('session.intra_op.allow_spinning','1' if spinning else '0')
+        options.add_session_config_entry('session.inter_op.allow_spinning','1' if spinning else '0')
         if size not in (384,512):raise ValueError('Unsupported detector input size')
         self.size=size
+        self.sizes={'primary':primary_size or size,'secondary':size}
+        if any(s not in (384,512) for s in self.sizes.values()):raise ValueError('Unsupported detector input size')
         self.models=[];self.confidence=confidence;self.pool=ThreadPoolExecutor(max_workers=2)
         for kind,names in (('primary',['waste','mine','weapon']),('secondary',['injured_person','hostile_unit'])):
-            suffix='-384' if size==384 else ''
+            model_size=self.sizes[kind]
+            suffix='-384' if model_size==384 else ''
             session=ort.InferenceSession(str(Path(models_dir)/(kind+suffix+'.onnx')),sess_options=options,providers=['CPUExecutionProvider'])
-            if session.get_inputs()[0].shape[-2:]!=[size,size]:raise ValueError('Detector input dimensions mismatch')
+            if session.get_inputs()[0].shape[-2:]!=[model_size,model_size]:raise ValueError('Detector input dimensions mismatch')
             self.models.append((kind,names,session))
 
     def infer(self,image_bgr,frame_meta):
-        h,w=image_bgr.shape[:2];size=self.size;ratio=min(size/w,size/h)
-        rw,rh=round(w*ratio),round(h*ratio);left=(size-rw)//2;top=(size-rh)//2
-        canvas=np.full((size,size,3),114,np.uint8)
-        canvas[top:top+rh,left:left+rw]=cv2.resize(image_bgr,(rw,rh))
-        tensor=np.ascontiguousarray(canvas[:,:,::-1].transpose(2,0,1)[None],dtype=np.float32)/255
+        h,w=image_bgr.shape[:2];inputs={}
+        for size in set(self.sizes.values()):
+            ratio=min(size/w,size/h);rw,rh=round(w*ratio),round(h*ratio)
+            left=(size-rw)//2;top=(size-rh)//2
+            canvas=np.full((size,size,3),114,np.uint8)
+            canvas[top:top+rh,left:left+rw]=cv2.resize(image_bgr,(rw,rh))
+            tensor=np.ascontiguousarray(canvas[:,:,::-1].transpose(2,0,1)[None],dtype=np.float32)/255
+            inputs[size]=(tensor,ratio,left,top)
         detections=[]
-        futures=[self.pool.submit(session.run,None,{session.get_inputs()[0].name:tensor}) for _,_,session in self.models]
+        futures=[self.pool.submit(session.run,None,{session.get_inputs()[0].name:inputs[self.sizes[kind]][0]}) for kind,_,session in self.models]
         for (kind,names,session),future in zip(self.models,futures):
+            _,ratio,left,top=inputs[self.sizes[kind]]
             output=future.result()[0]
             rows=output[0].T
             if rows.shape[1]!=4+len(names):raise ValueError('Unexpected ONNX output layout')

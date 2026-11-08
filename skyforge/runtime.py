@@ -106,7 +106,7 @@ class Runtime:
                     # Observed lidar points, not the world target manifest.
                     if np.linalg.norm(np.array(point)-pose["p"][:2])<7:
                         observed.append({"x":point[0],"y":point[1],"radius":.10,"kind":"lidar"})
-                snapshot={"position_enu_m":pose["p"].tolist(),"base_enu_m":[-12,-9,.055],"wind_enu_mps":self.bus.wind.tolist(),
+                snapshot={"position_enu_m":pose["p"].tolist(),"base_enu_m":[-12,-9,.055],"wind_enu_mps":self.bus.wind.tolist(),'t_sim_s':t,
                           "battery_wh":self.battery.remaining_wh,"events":self.events[-20:],"supply_count":self.supply_count,
                           "frame":frame,"detections":batch,"snapshot_seq":self.seq,"goal_revision":self.goal_revision,
                           "goal_update":self.goal_update,"map_revision":self.seq,"obstacle_circles":observed,"urgency_observations":self.beacons}

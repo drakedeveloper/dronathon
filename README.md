@@ -5,6 +5,11 @@ covers cloning, portable tests, WSL/Gazebo provisioning, models and known gaps.
 Current implementation includes both AI agents and detectors. This is an
 in-progress prototype; the notes below include historical setup milestones.
 
+**Latest measured run:** three virtual deliveries, autonomous return with
+5.48 Wh from 15 Wh, zero geometric hazard entries/static collisions, and
+171 simulated seconds. Timing still exceeds the 150 ms requirement. See
+[evidence and limits](validation/README.md).
+
 Prepared 7 November 2026 in `D:\dronathon`. **The official specification has now arrived:** see [official requirements](docs/official-requirements.md). The earlier research notes and competition plan are pre-brief preparation; the PDF takes precedence. This installed baseline does not yet satisfy the full competition architecture.
 
 ## Current status — 8 November

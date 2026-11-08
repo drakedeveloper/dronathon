@@ -138,6 +138,7 @@ class PlannerAgent:
             xs=(-11.,11.) if row%2==0 else (11.,-11.)
             self.coverage.extend([[x,float(y),self.altitude] for x in xs])
         self.coverage_index=0;self.return_latched=False;self.last_goal_revision=-1
+        self.beacon_inspected=set();self.beacon_arrival={}
         self.last_return_threshold=config.get("reserve_wh",1.)+.12
 
     def energy_for_route(self,path,wind,landing=False):
@@ -224,6 +225,31 @@ class PlannerAgent:
                     path=astar(pos,update["position"],circles,altitude=self.altitude);code="GROUND_STATION_REROUTE"
                     if np.linalg.norm(pos[:2]-np.array(update["position"])[:2])<.8:
                         self.last_goal_revision=revision;path=None
+                if not path:
+                    # Distress-radio observations are an explicit scenario
+                    # input, not hidden world truth. Investigate highest urgency
+                    # before spending energy on a blind sweep. A beacon never
+                    # authorizes delivery without visual confirmation.
+                    beacons=sorted(snapshot.get('urgency_observations',[]),
+                        key=lambda b:(-b.get('urgency',1),math.dist(pos[:2],b['position'][:2])))
+                    for beacon in beacons:
+                        p=np.array(beacon['position'],float);p[2]=self.altitude
+                        identity=tuple(round(float(v),2) for v in p[:2])
+                        confirmed=any(t['class']=='injured_person' and t['seen_count']>=2
+                            and math.dist(t['position'][:2],p[:2])<1.5 for t in tracks.values())
+                        if confirmed:self.beacon_inspected.add(identity)
+                        if identity in self.beacon_inspected:continue
+                        if math.dist(pos[:2],p[:2])<.7:
+                            now=snapshot.get('t_sim_s',0.)
+                            self.beacon_arrival.setdefault(identity,now)
+                            if now-self.beacon_arrival[identity]>=2.:
+                                self.beacon_inspected.add(identity);continue
+                        path=astar(pos,p,circles,altitude=self.altitude)
+                        code='INVESTIGATE_DISTRESS_BEACON' if path else 'BEACON_ROUTE_PENDING_HOLD'
+                        break
+                if not path:
+                    if code=='BEACON_ROUTE_PENDING_HOLD':
+                        path=[pos.tolist()]
                 if not path:
                     while self.coverage_index<len(self.coverage):
                         candidate=self.coverage[self.coverage_index]

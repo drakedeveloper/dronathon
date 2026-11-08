@@ -16,11 +16,12 @@ def iou(a,b):
 import argparse
 parser=argparse.ArgumentParser();parser.add_argument('--backend',choices=['forest','onnx'],default='forest')
 parser.add_argument('--dataset',type=Path,default=ROOT/'data/synthetic')
-parser.add_argument('--size',type=int,choices=[384,512],default=512);args=parser.parse_args()
+parser.add_argument('--size',type=int,choices=[384,512],default=512)
+parser.add_argument('--primary-size',type=int,choices=[384,512]);args=parser.parse_args()
 folder=args.dataset;manifest=json.loads((folder/"manifest.json").read_text())
 if args.backend=='onnx':
     from skyforge.neural_vision import NeuralVisionSystem
-    model=NeuralVisionSystem(ROOT/'models',size=args.size)
+    model=NeuralVisionSystem(ROOT/'models',size=args.size,primary_size=args.primary_size)
 else:model=VisionSystem(ROOT/"models")
 counts=defaultdict(lambda:{"tp":0,"fp":0,"fn":0});durations=[]
 for i,item in enumerate(manifest):
@@ -41,4 +42,6 @@ import numpy as np
 report={"domain":"rendered validation scenes, used for development tuning; fresh final test still required","iou_threshold":.5,"counts":dict(counts),"inference_p95_ms":float(np.percentile(durations,95)),"images":len(durations)}
 report['backend']=args.backend
 report['input_size']=args.size if args.backend=='onnx' else None
-(ROOT/f"artifacts/vision-evaluation-{args.backend}-{args.size}.json").write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))
+report['primary_size']=args.primary_size or args.size
+suffix=f'-primary{args.primary_size}' if args.primary_size else ''
+(ROOT/f"artifacts/vision-evaluation-{args.backend}-{args.size}{suffix}.json").write_text(json.dumps(report,indent=2));print(json.dumps(report,indent=2))

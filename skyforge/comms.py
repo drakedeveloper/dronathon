@@ -115,15 +115,34 @@ class RadioClient:
 
 
 class StationRadio:
-    def __init__(self,port=8765,key=None):
+    def __init__(self,port=8765,key=None,state_path=None):
         self.codec=Codec(load_key() if key is None else key);self.guard=ReplayGuard();self.session=uuid.uuid4().hex[:12]
         self.port=port;self.latest={};self.history=deque(maxlen=200);self.last_rx=0.;self.connected=False
         self.pending={};self.command_seq=0;self.ack_seq=0;self.mission=None;self.client_session=None
         self.blackout_until=0.;self.corrupt_next=False;self.last_command=None;self.replay_next=False
         self.lock=threading.Lock();self.stop=threading.Event();self.rejected=0;self.received_events=0
+        self.state_path=Path(state_path) if state_path is not None else None
+        if self.state_path and self.state_path.exists():
+            saved=json.loads(self.state_path.read_text())
+            for mission,session,stream,seq in saved['last']:
+                if stream not in ('event','status') or type(seq) is not int or seq<0:
+                    raise ValueError('Invalid station replay checkpoint')
+                self.guard.last[(mission,session,stream)]=seq
+            self.history.extend(saved['history']);self.received_events=saved['received_events']
         self.ready=threading.Event()
         self.worker=threading.Thread(target=self._serve,daemon=True);self.worker.start()
         if not self.ready.wait(3):raise RuntimeError("Station radio listener did not start")
+
+    def persist_events(self):
+        if self.state_path is None:return
+        self.state_path.parent.mkdir(parents=True,exist_ok=True)
+        data={'last':[[*key,value] for key,value in self.guard.last.items() if key[2] in ('event','status')],
+              'history':list(self.history),'received_events':self.received_events}
+        temporary=self.state_path.with_suffix('.tmp')
+        with temporary.open('w') as handle:
+            json.dump(data,handle,separators=(',',':'),allow_nan=False)
+            handle.flush();os.fsync(handle.fileno())
+        os.replace(temporary,self.state_path)
 
     def queue_command(self,kind,data):
         if self.mission is None:raise ValueError("Wait for the drone radio link")
@@ -173,6 +192,9 @@ class StationRadio:
                                         try:accepted=self.guard.accept(body)
                                         except SequenceGap:accepted=False
                                         if accepted:self.history.append(body);self.received_events+=1
+                                        # Persist the contiguous high-water mark
+                                        # before acknowledging it to the drone.
+                                        self.persist_events()
                                         key=(body["mission"],body["session"],"event")
                                         self.ack_seq+=1
                                         ack=envelope(body["mission"],self.session,"ack",self.ack_seq,0,"ack_events",{"up_to":self.guard.last.get(key,0)})

@@ -56,13 +56,13 @@ Full source paths: `skyforge/`, `station/`, `sim/plugins/`, `tests/`, `contracts
 
 ## Current evidence and open work
 
-Latest measured mission6c012085: two virtual deliveries, autonomous return with
-2.93Wh, no hazard entries/static collisions in the geometric checker. Dynamic
-contacts are not certified. A prior run delivered3 supplies but exhausted energy
-and emergency landed short of base; the planner budget was corrected afterward.
+Latest measured mission c5da6412: three virtual deliveries, autonomous return
+with 5.48 Wh, and no hazard entries/static collisions in the geometric checker.
+Dynamic contacts are not certified. Earlier runs failed return or delivered
+fewer supplies. See `validation/README.md` for measurements and limitations.
 
-Main unresolved requirements: repeated full mission success, all3casualties with
-safe return under the chosen battery, weapon recall, new unseen-scene validation,
+Main unresolved requirements: repeated full mission success, weapon recall,
+new unseen-scene validation,
 capture-to-actuation150ms p95, actual supply release and independent landing
 evaluation, fault/replay demo, and more realistic art. JSON radio integrity and
 real-socket outage/replay tests exist. The radio is loopback and not encrypted.

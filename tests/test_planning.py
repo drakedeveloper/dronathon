@@ -42,6 +42,20 @@ def test_empty_supply_inventory_returns_with_healthy_battery():
     assert planner.return_latched
 
 
+def test_radio_distress_beacon_directs_search_but_never_authorizes_delivery():
+    planner=PlannerAgent({'reserve_wh':1})
+    state={'position_enu_m':[-10,-8,8],'base_enu_m':[-12,-9,.05],
+           'battery_wh':15,'snapshot_seq':1,'obstacle_circles':[],
+           'events':[],'supply_count':3,'urgency_observations':[
+               {'position':[-9,-7,0],'urgency':1,'source':'test_beacon'},
+               {'position':[9,-3,0],'urgency':3,'source':'test_beacon'}]}
+    decision=planner.plan(state,{})
+    assert decision['phase']=='EXPLORER'
+    assert decision['decision_code']=='INVESTIGATE_DISTRESS_BEACON'
+    assert decision['waypoints_enu_m'][-1]==[9.,-3.,8.]
+    assert decision['request_delivery'] is None
+
+
 def test_urgency_dominates_distance_and_infeasible_is_excluded():
     candidates=[{"id":"near","urgency":1,"travel_s":1,"feasible":True},
                 {"id":"critical","urgency":3,"travel_s":40,"feasible":True},

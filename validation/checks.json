@@ -1,0 +1,20 @@
+{
+  "windows_tests": 46,
+  "linux_tests": 46,
+  "status": "passed",
+  "coverage": [
+    "physics",
+    "bounded routing",
+    "triage",
+    "radio TCP outage/replay/corruption",
+    "receiver restart cursor",
+    "station snapshot race",
+    "protocol schemas",
+    "MessagePack RPC framing"
+  ],
+  "limits": [
+    "Not full mission acceptance",
+    "No fresh blind vision test",
+    "No complete capture-to-motor deadline proof"
+  ]
+}
