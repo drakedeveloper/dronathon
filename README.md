@@ -18,7 +18,8 @@ the local simulator and its mission services, even during flight. This aborts
 the current simulated run. Every native Start launcher first clears the previous
 owned demo processes, then launches a fresh instance. Unrelated applications are left open.
 Use **START-QUALITY-DEMO.bat** for the optional 1600x900 visual profile, capped at
-60 FPS with a 1400 MB texture pool, moderate shadows and 8x anisotropic filtering.
+60 FPS with a 1400 MB texture pool, 2048-pixel shadow maps, contact shadows,
+8x anisotropic filtering, restrained bloom and adjusted midtone contrast.
 It keeps flight logic, physics and detector camera dimensions unchanged. Rendering
 can affect image appearance and timing; use the original performance launcher
 for timing comparisons. Quality settings follow [Epic's scalability reference](https://dev.epicgames.com/documentation/en-us/unreal-engine/scalability-reference-for-unreal-engine).
