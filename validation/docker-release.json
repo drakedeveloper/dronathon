@@ -1,0 +1,7 @@
+{
+  "image": "skyforge:submission",
+  "build": "passed",
+  "container_tests": 87,
+  "tests": "passed",
+  "scope": "ROS2 Jazzy/Gazebo image build and source test execution; native AirSim is distributed separately"
+}

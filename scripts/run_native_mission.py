@@ -23,6 +23,9 @@ def main():
     parser.add_argument('--device',choices=['cpu','cuda'],default='cuda')
     parser.add_argument('--models',type=Path,default=ROOT/'models/native')
     parser.add_argument('--vision-size',type=int,choices=[384,512],default=512)
+    parser.add_argument('--person-confidence',type=float,choices=[.25,.35],default=.35)
+    parser.add_argument('--render-fps',type=int,choices=[30,45,60,75,90,120],default=75)
+    parser.add_argument('--observer',action='store_true',help='Enable additional 1 Hz diagnostic camera for a recorded demo')
     parser.add_argument('--exit-on-complete',action='store_true',help='Stop station after an automated campaign run')
     parser.add_argument('--energy-wh',type=float,default=15.,help='Declared mission stress allowance; cannot exceed reference usable battery energy')
     args=parser.parse_args()
@@ -30,7 +33,7 @@ def main():
     settings=json.loads(backend.navigation.call('getSettingsString'))
     if settings.get('SkyforgeScenario')!='coastal-rescue' or settings.get('PhysicsEngineName')!='FastPhysicsEngine':
         raise RuntimeError('Launch the custom physical coastal-rescue scene first')
-    backend.commands.call('simRunConsoleCommand','t.MaxFPS 60')
+    backend.commands.call('simRunConsoleCommand','t.MaxFPS '+str(args.render_fps))
     backend.commands.call('simRunConsoleCommand','t.IdleWhenNotForeground 0')
     first=backend.state();time.sleep(.5);second=backend.state()
     if np.linalg.norm(second['v'])>.15 or np.linalg.norm(second['p']-first['p'])>.08:
@@ -57,6 +60,9 @@ def main():
             'stats_port':42102,'radio_port':8767,'vision_device':args.device,
             'models_dir':str(args.models.resolve()),
             'vision_size':args.vision_size,
+            'person_confidence':args.person_confidence,
+            'render_fps':args.render_fps,'view_mode':settings.get('ViewMode'),'vision_period_s':.125,
+            'record_observer':args.observer,
             'mission_energy_allowance_wh':args.energy_wh,'reference_usable_energy_wh':usable_energy,
             'scene_manifest':str(scene_manifest),
             'max_mission_seconds':360}

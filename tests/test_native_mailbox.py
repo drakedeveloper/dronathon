@@ -47,3 +47,12 @@ def test_first_authenticated_frame_receipt_is_measured_once_not_repeated_setpoin
     assert first>=10
     assert box.receive(box.codec.encode(envelope('native','session','command',2,0,'setpoint',data)))
     assert box.accepted_latency_ms==first
+
+
+def test_corruption_is_detected_before_a_new_setpoint_replaces_the_old_state():
+    box=NativeMailbox(b'x'*32)
+    data={'p':[1.,2.,8.],'valid_until':1000,'phase':'EXPLORER','fault_inject':True}
+    assert box.receive(box.codec.encode(envelope('native','session','command',1,0,'setpoint',data)))
+    clean={**data,'fault_inject':False}
+    assert box.receive(box.codec.encode(envelope('native','session','command',2,0,'setpoint',clean)))
+    assert box.reason(.1)=='STATE_CRC_HOLD'

@@ -1,9 +1,15 @@
-param([int]$Width = 1280, [int]$Height = 720,[switch]$Offscreen,[switch]$Packaged)
+param([int]$Width = 1280, [int]$Height = 720,[switch]$Offscreen,[switch]$Packaged,[switch]$Realtime)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $engine = 'D:\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
 $project = Join-Path $root 'runtime\unreal\SKYFORGE\SKYFORGE.uproject'
 $settings = Join-Path $root 'configs\airsim-native-settings.json'
+if ($Realtime) {
+    $profile=Get-Content -LiteralPath $settings -Raw | ConvertFrom-Json
+    $profile.ViewMode='NoDisplay'
+    $settings=Join-Path $root 'runtime\native-settings-realtime.json'
+    $profile | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $settings -Encoding ascii
+}
 $packagedExe=Join-Path $env:LOCALAPPDATA 'SKYFORGE\Packaged\Windows\SKYFORGE.exe'
 if ($Packaged -and !(Test-Path -LiteralPath $packagedExe)) { throw 'Complete package_native_airsim.ps1 first' }
 if (!$Packaged -and (!(Test-Path -LiteralPath $engine) -or !(Test-Path -LiteralPath $project))) {

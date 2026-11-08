@@ -27,7 +27,12 @@ class NativeMailbox:
         self.codec=Codec(key);self.guard=ReplayGuard();self.goal=None;self.crc=None
         self.received_wall=0.;self.rejected=0
         self.accepted_frame_ns=0;self.accepted_latency_ms=None
+        self.integrity_fault_until=0.
     def receive(self,packet):
+        # Inspect the old state before a newer legitimate setpoint can replace
+        # it, so transient corruption cannot disappear between control ticks.
+        if self.goal is not None and zlib.crc32(canonical(self.goal))!=self.crc:
+            self.integrity_fault_until=time.monotonic()+.1
         try:
             body=self.codec.decode(packet)
             if body['type']!='setpoint' or body['stream']!='command':raise PacketError('Invalid control stream')
@@ -58,6 +63,7 @@ class NativeMailbox:
             return True
         except (PacketError,ValueError,KeyError,TypeError):self.rejected+=1;return False
     def reason(self,sim_time):
+        if time.monotonic()<self.integrity_fault_until:return 'STATE_CRC_HOLD'
         if self.goal is None or time.monotonic()-self.received_wall>.65:return 'STALE_AI_HOLD'
         if zlib.crc32(canonical(self.goal))!=self.crc:return 'STATE_CRC_HOLD'
         if sim_time*1000>self.goal['data'].get('valid_until',0):return 'STALE_AI_HOLD'
@@ -76,6 +82,7 @@ class NativeReflex:
         self.output=np.zeros(3);self.armed=False;self.lock=threading.Lock()
         self.stop_reason=None;self.lidar_received=0.;self.lidar_errors=0
         self.output_frame_ns=0;self.completed_frame_ns=0;self.completed_latency_ms=None
+        self.dispatched_frame_ns=0;self.dispatched_latency_ms=None
         self.times=deque(maxlen=2000);self.crc_holds=0;self.override_cycles=0;self.last_frame=0
 
     def sense(self):
@@ -92,7 +99,7 @@ class NativeReflex:
                         self.points=points[valid];last_scan=start;self.lidar_received=time.monotonic()
                     except (OSError,ValueError,RuntimeError):self.points=np.empty((0,3));self.lidar_errors+=1
             except (OSError,ValueError,RuntimeError):self.pose_errors+=1
-            time.sleep(max(0,.02-(time.monotonic()-start)))
+            time.sleep(max(0,.01-(time.monotonic()-start)))
 
     def send_velocity(self):
         while self.running:
@@ -100,12 +107,15 @@ class NativeReflex:
             if self.armed:
                 try:
                     with self.lock:velocity=self.output.copy();frame_ns=self.output_frame_ns
-                    self.backend.velocity(velocity,duration=.02)
+                    def sent(timestamp):
+                        if frame_ns and frame_ns!=self.dispatched_frame_ns:
+                            self.dispatched_frame_ns=frame_ns;self.dispatched_latency_ms=max(0.,(timestamp-frame_ns)/1e6)
+                    self.backend.velocity(velocity,duration=.01,on_sent=sent)
                     if frame_ns and frame_ns!=self.completed_frame_ns:
                         self.completed_frame_ns=frame_ns
                         self.completed_latency_ms=max(0.,(time.monotonic_ns()-frame_ns)/1e6)
                 except (OSError,ValueError,RuntimeError):self.pose_errors+=1
-            time.sleep(max(0,.02-(time.monotonic()-start)))
+            time.sleep(max(0,.01-(time.monotonic()-start)))
 
     def run(self):
         workers=[threading.Thread(target=self.sense,daemon=True),threading.Thread(target=self.send_velocity,daemon=True)]
@@ -149,7 +159,9 @@ class NativeReflex:
                         home=np.asarray(self.config['base_enu_m'])
                         at_ground=(abs(pose['p'][2]-self.config['home_body_z'])<.18 and np.linalg.norm(pose['v'])<.18)
                         can_disarm=data['phase']=='POSE' and at_ground
-                        if can_disarm or data.get('available_wh',1)<=0:
+                        if data.get('available_wh',1)<=0 and not at_ground:
+                            desired[:]=[0.,0.,-.4];reason='ENERGY_CRITICAL_DESCENT'
+                        if can_disarm or (data.get('available_wh',1)<=0 and at_ground):
                             self.armed=False;self.backend.control_enabled=False
                             self.backend.commands.call('armDisarm',False,self.backend.vehicle)
                             desired[:]=0;reason='LANDED' if can_disarm else 'ENERGY_EXHAUSTED'
@@ -164,19 +176,20 @@ class NativeReflex:
                         self.output_frame_ns=self.mailbox.goal['data'].get('frame_request_wall_ns',0) if self.mailbox.goal else 0
                     last_v=velocity;last_a=acceleration
                 self.times.append((time.perf_counter_ns()-begin)/1e6)
-                if pose and now-last_publish>.02:
+                if pose and now-last_publish>.01:
                     info={'t':pose['t'],'p':pose['p'].tolist(),'v':pose['v'].tolist(),'q':pose['q'].tolist(),
                           'reason':reason,'p95_ms':float(np.percentile(self.times,95)),
                           'range_m':nearest,'points':self.points[::max(1,len(self.points)//24),:2].round(2).tolist(),
                           'crc_hold_cycles':self.crc_holds,'overrides':self.override_cycles,
                           'pose_errors':self.pose_errors,'lidar_errors':self.lidar_errors,
                           'completed_frame_ns':self.completed_frame_ns,'completed_latency_ms':self.completed_latency_ms,
+                          'dispatched_frame_ns':self.dispatched_frame_ns,'dispatched_latency_ms':self.dispatched_latency_ms,
                           'accepted_frame_ns':self.mailbox.accepted_frame_ns,'accepted_latency_ms':self.mailbox.accepted_latency_ms,
                           'bad_packets':self.mailbox.rejected,'armed':self.armed}
                     info['collision']=pose.get('collision',{})
                     self.socket.sendto(json.dumps(info,separators=(',',':'),allow_nan=False).encode(),self.stats_destination)
                     last_publish=now
-                time.sleep(max(0,.02-(time.perf_counter_ns()-begin)/1e9))
+                time.sleep(max(0,.01-(time.perf_counter_ns()-begin)/1e9))
         finally:
             self.running=False
             with self.lock:self.output[:]=0

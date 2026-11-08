@@ -1,0 +1,17 @@
+{
+  "frozen_at_utc": "2026-11-08T04:54:01.905607+00:00",
+  "scope": "Unseen views in same authored scene, not unseen-world or real-photo generalization",
+  "test_seed": 1833,
+  "test_views": 100,
+  "train_seed": 1811,
+  "development_seed": 1822,
+  "models": {
+    "primary": "dd47d503c5c0ca1819555e5a75c07dacd3c54af8bb67c465c3c874f91358ed23",
+    "secondary": "fdedbe1b58f52a25d9f3ce8071a23c4582262880e4217976fa9245c642140629"
+  },
+  "primary_confidence": 0.35,
+  "person_confidence": 0.25,
+  "match_iou": 0.5,
+  "visual_scene": "Original exterior weapon mesh v1, other geometry unchanged",
+  "rule": "Do not tune on these test results; any subsequent change requires a new disjoint test and disclosure."
+}

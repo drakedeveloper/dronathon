@@ -157,4 +157,7 @@ def palm():
     mesh.write('coastal_palm')
 
 
-if __name__=='__main__':island();cinematic_island();person();hangar_roof();palm()
+if __name__=='__main__':
+    island();cinematic_island();person();hangar_roof();palm()
+    from scripts.generate_inert_prop import generate
+    generate()

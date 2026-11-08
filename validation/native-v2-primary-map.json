@@ -1,0 +1,25 @@
+{
+  "implementation": "Official Ultralytics box validation, 101-point AP; no training",
+  "domain": "Unseen views in the same authored scene; not unseen-world or real-photo generalization",
+  "weights_sha256": "fe8820f3b60c3b492f5405cd476f0572d0a2684a458fa4fecbccc82dfdf094cd",
+  "manifest_sha256": "fe21ec5981b144c492929b168c11881557f0db73d06b0e1c863826a4f3c874ce",
+  "split": "test",
+  "dataset": "data\\native-final-v2-test",
+  "kind": "primary",
+  "map50": 0.9919927536231885,
+  "map50_95": 0.5840197369807062,
+  "classes": {
+    "waste": {
+      "ap50": 0.995,
+      "ap50_95": 0.7010175744361228
+    },
+    "mine": {
+      "ap50": 0.995,
+      "ap50_95": 0.5642303071642317
+    },
+    "weapon": {
+      "ap50": 0.9859782608695654,
+      "ap50_95": 0.48681132934176413
+    }
+  }
+}

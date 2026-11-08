@@ -11,7 +11,7 @@ import onnxruntime as ort
 
 
 class NeuralVisionSystem:
-    def __init__(self,models_dir,confidence=.35,size=512,primary_size=None,spinning=False,device='cpu',kinds=('primary','secondary')):
+    def __init__(self,models_dir,confidence=.35,size=512,primary_size=None,spinning=False,device='cpu',kinds=('primary','secondary'),person_confidence=None):
         if not kinds or any(kind not in ('primary','secondary') for kind in kinds):raise ValueError('Invalid detector selection')
         options=ort.SessionOptions();options.intra_op_num_threads=2;options.inter_op_num_threads=1
         options.execution_mode=ort.ExecutionMode.ORT_SEQUENTIAL
@@ -22,6 +22,7 @@ class NeuralVisionSystem:
         self.sizes={'primary':primary_size or size,'secondary':size}
         if any(s not in (384,512) for s in self.sizes.values()):raise ValueError('Unsupported detector input size')
         self.models=[];self.confidence=confidence;self.pool=ThreadPoolExecutor(max_workers=2)
+        self.person_confidence=confidence if person_confidence is None else person_confidence
         providers=['CPUExecutionProvider']
         if device=='cuda':
             if hasattr(ort,'preload_dlls'):ort.preload_dlls(directory='')
@@ -64,19 +65,20 @@ class NeuralVisionSystem:
             tensor=selected_inputs[kind][0].astype(dtype,copy=False)
             futures.append(self.pool.submit(session.run,None,{metadata.name:tensor}))
         for (kind,names,session),future in zip(self.models,futures):
+            threshold=getattr(self,'person_confidence',self.confidence) if kind=='secondary' else self.confidence
             _,ratio,left,top=selected_inputs[kind]
             output=future.result()[0]
             rows=output[0].T
             if rows.shape[1]!=4+len(names):raise ValueError('Unexpected ONNX output layout')
             scores=rows[:,4:];labels=scores.argmax(axis=1);confidence=scores.max(axis=1)
             for label,name in enumerate(names):
-                selected=(labels==label)&(confidence>=self.confidence)
+                selected=(labels==label)&(confidence>=threshold)
                 proposals=rows[selected,:4];values=confidence[selected]
                 if not len(proposals):continue
                 boxes=np.c_[(proposals[:,0]-proposals[:,2]/2-left)/ratio,
                             (proposals[:,1]-proposals[:,3]/2-top)/ratio,
                             proposals[:,2]/ratio,proposals[:,3]/ratio]
-                keep=cv2.dnn.NMSBoxes(boxes.tolist(),values.tolist(),self.confidence,.45)
+                keep=cv2.dnn.NMSBoxes(boxes.tolist(),values.tolist(),threshold,.45)
                 for index in np.asarray(keep).reshape(-1):
                     x,y,bw,bh=boxes[index]
                     box=[float(np.clip(x,0,w)),float(np.clip(y,0,h)),float(np.clip(x+bw,0,w)),float(np.clip(y+bh,0,h))]

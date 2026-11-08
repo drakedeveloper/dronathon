@@ -1,0 +1,14 @@
+{
+  "frozen_at_utc": "2026-11-08T07:02:19.364631+00:00",
+  "scope": "Unseen camera poses in same authored world, frozen before scoring",
+  "test_seed": 4833,
+  "train_seed": 2811,
+  "val_seed": 2822,
+  "test_views": 100,
+  "primary_confidence": 0.35,
+  "person_confidence": 0.25,
+  "models": {
+    "primary": "2a2b856b437ad55ce0ea34ce69da853551e587cd6b31b04c3e392e7fc72f43da",
+    "secondary": "fdedbe1b58f52a25d9f3ce8071a23c4582262880e4217976fa9245c642140629"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "domain": "Unseen rendered test views in the same authored scene",
+  "iou_threshold": 0.5,
+  "counts": {
+    "mine": {
+      "tp": 23,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "weapon": {
+      "tp": 18,
+      "fp": 0,
+      "fn": 2,
+      "precision": 1.0,
+      "recall": 0.9
+    },
+    "waste": {
+      "tp": 45,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  },
+  "inference_p95_ms": 16.052535,
+  "images": 100,
+  "backend": "onnx",
+  "device": "cuda",
+  "dataset": "data\\native-final-v2-test",
+  "models": "artifacts\\native_prop_models",
+  "split": "test",
+  "kind": "primary",
+  "confidence": 0.35,
+  "false_positive_examples": [],
+  "input_size": 512,
+  "primary_size": 512
+}

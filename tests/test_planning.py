@@ -110,3 +110,12 @@ def test_unsafe_station_objective_is_rejected_and_return_interrupt_has_priority(
     assert planner.last_goal_revision==1
     state.update(battery_wh=.5,goal_revision=2)
     assert planner.plan(state,{})['phase']=='RETOUR_BASE'
+
+
+def test_station_vertical_goal_does_not_reinsert_survey_altitude_during_descent():
+    planner=PlannerAgent({'reserve_wh':1});planner.phase='NAVIGUER'
+    state={'position_enu_m':[-7,-5,7.5],'base_enu_m':[-12,-9,.2],'battery_wh':20,
+           'snapshot_seq':1,'obstacle_circles':[],'events':[],
+           'goal_revision':1,'goal_update':{'position':[-7,-5,6]}}
+    result=planner.plan(state,{})
+    assert result['waypoints_enu_m']==[[-7.,-5.,7.5],[-7.,-5.,6.]]

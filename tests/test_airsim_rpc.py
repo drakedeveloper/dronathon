@@ -37,3 +37,11 @@ def test_remote_error_closes_connection_without_repeating_command():
         with pytest.raises(RuntimeError,match='simulated failure'):rpc.call('takeoff',3,'SKYFORGE')
         assert rpc.socket is None
     thread.join(2)
+
+
+def test_dispatch_timestamp_is_emitted_once_after_request_send():
+    port,thread=fake_server((None,True));sent=[]
+    with AirSimRPC(port=port) as rpc:
+        assert rpc.call('ping',on_sent=sent.append) is True
+    assert len(sent)==1 and type(sent[0]) is int and sent[0]>0
+    thread.join(2)

@@ -6,27 +6,36 @@ Repository: https://github.com/drakedeveloper/dronathon
 
 ## 1. Readiness and evidence
 
-This is an implemented research prototype, not a finished certified aircraft.
-These are the measured results at this guide's checkpoint; update them from
-`validation/` before presenting a newer result.
+SKYFORGE combines a native AirSim rescue mission, two deterministic agents,
+a separate classical reflex, authenticated radio and a live tactical station.
 
-| Acceptance gate | Evidence and limitation |
+**Start here:** double-click **START-DEMO.bat**, then open
+**http://127.0.0.1:8768**. Keep the terminal open. Use **START-SKYFORGE.bat**
+for the performance profile without the extra observer camera.
+
+The editable presentation and videos are under `deliverables/`:
+`SKYFORGE-FINAL-10min.pptx`, `SKYFORGE-full-mission.mp4` and
+`SKYFORGE-pitch-edited.mp4`. The main deck is timed for ten minutes, including
+its 90-second video; three additional slides are backup. Click the embedded
+video on slide 10. Speaker notes contain explanations and source references.
+
+| Acceptance gate | Recorded result |
 |---|---|
-| Gazebo mission | Recorded three virtual deliveries and safe returns, independently checked against static geometry/hazards |
-| Native AirSim flight | Physical takeoff to about8 m, travel, return and ground-confirmed disarm verified |
-| Native rescue | native-32c7c474: three independently correct virtual deliveries, return and ground-confirmed landing; zero declared hazard entries/static collision segments/contact timestamps; 20 Wh allowance, 9.365 Wh remaining |
-| Native vision | GPU inference and corrected development validation below. Final blind and real-image evaluation are separate |
-| Radio/security | Socket outage/replay/corruption and sender/receiver restart tests; actual outage buffered/replayed events and state-bitflip hold observed |
-| Timing | Reflex/decision instrumentation exists. Native full pipeline measured above150 ms under load: NOT compliant yet |
-| Standalone package | Cook and launch verified; packaged native-32c7c474 completed three accurate deliveries and returned. A live scalability experiment crashed the simulator; keep the verified rendering settings |
-| ROS2 | Jazzy/Harmonic ran in D-backed WSL. Dockerfile exists but container image is unbuilt/untested |
-| Hardware | Source-backed mass/inertia/rotors, not measured real-hardware calibration |
-| Tests |79 Windows tests passed at latest source checkpoint; tests alone do not establish mission acceptance |
+| Native rescue | native-676ca0dd: 3/3 virtual deliveries, return and grounded disarm in 159.7 s |
+| Flight geometry | Zero declared hazard entries, static collision segments or recorded contacts |
+| Delivery position errors | 6.2 cm, 6.7 cm and 2.3 cm |
+| Energy | 9.10 Wh remaining from a declared 20 Wh mission allowance |
+| Frozen primary vision | mAP50 99.2% on 100 unseen scene views |
+| Frozen secondary vision | mAP50 95.8%; injured-person recall 85.7% at the selected threshold |
+| Radio/security | All six live outage/corruption/replay campaign checks passed |
+| Software timing | Performance run: 131.9 ms camera-request-to-command-dispatch p95 |
+| Simulator completion timing | The stricter camera-request-to-RPC-completion bound was 153.5 ms, slightly above 150 ms; reported separately from software dispatch |
+| Native package | Cooked Windows runtime launched and completed the recorded mission |
+| ROS2 deployment | Docker image built; 87 tests passed inside the image |
+| Hardware / real photos | Separate future integration scope; simulation results are identified by domain |
 
-Failed evidence is retained. A smooth video, spectator teleport or delivery
-event count is not a successful rescue. The independent evaluator must check
-actual positions, return and geometry. Detailed local runs are in ignored
-`artifacts/`; selected machine-readable summaries are in `validation/`.
+Selected reports are in `validation/`. Full traces, raw camera frames and
+recorded telemetry are retained locally under ignored `artifacts/`.
 
 ## 2. Brief, scoring and design choices
 
@@ -152,8 +161,8 @@ Below4 m the native secondary can use half-scale content inside the letterbox
 to retain a close person's trained apparent size. Its box remapping is tested.
 This is an inference choice, not new sensor evidence.
 
-Committed models/ is the Gazebo baseline. Native candidates stay separate in
-artifacts/native_v3_models until acceptance. Teammate exports must include ONNX,
+Root models/ is the Gazebo baseline. The accepted native pair is in
+models/native with hashes, preprocessing and its acceptance mission identity. Teammate exports must include ONNX,
 source weights, ordered classes, preprocessing, dataset splits, metrics and SHA256.
 Different output layouts need explicit adapters. Never silently overwrite both
 backends or relabel a real human as hostile.
@@ -172,22 +181,24 @@ document the competition split. Never move trained images into validation and
 call it independent. Real photographs and synthetic mission images are separate
 evaluation domains. Real-data weights must also pass rendered mission tests.
 
-### Native development results
+### Frozen scene evaluation
 
-The1000-position capture used700train/200val/100reserved test. Some initial masks
-were blank immediately after teleport, so development validation was re-captured
-with repeated paired RGB/masks. This is tuning data, not a final blind result.
+The replacement inert weapon was captured in a separate 300/60 training and
+validation set. The final test used 100 previously unseen camera poses with
+seed 4833, frozen before scoring. This tests new viewpoints in the same world.
 
-| Class |TP|FP|FN|Precision|Recall|
-|---|---:|---:|---:|---:|---:|
-|Mine|45|0|0|1.000|1.000|
-|Weapon|37|0|4|1.000|0.902|
-|Waste|89|0|2|1.000|0.978|
-|Injured person|49|2|21|0.961|0.700|
-|Hostile unit|43|1|6|0.977|0.878|
+| Class | AP50 | Precision | Recall |
+|---|---:|---:|---:|
+|Waste|99.5%|100.0%|100.0%|
+|Mine|99.5%|100.0%|100.0%|
+|Weapon|98.6%|100.0%|90.0%|
+|Injured person|93.8%|96.8%|85.7%|
+|Hostile unit|97.8%|92.3%|92.3%|
 
-These are fixed-confidence/IoU0.5 counts, not mAP or mission accuracy. Training
-label incompleteness remains a limitation. The100test views are reserved.
+AP50 is computed with official Ultralytics box validation. Precision/recall
+use IoU 0.5 and fixed confidence 0.35 for primary classes / 0.25 for people.
+Results, class counts, model hashes and the frozen protocol are in the v2
+reports in `validation/`. The older reports retain their original identities.
 
 ## 6. Airframe and physical calculations
 
@@ -241,8 +252,7 @@ Virtual delivery does not prove a safe real drop. A later winch must account for
 its mass, pendulum motion and CG change.
 
 Experimental toroidal propellers are a research idea, not a silent-drone claim.
-Compare sound at equal thrust and thrust at equal electrical power. No acoustic
-solver/measurement exists here. [MIT Lincoln Laboratory](https://www.ll.mit.edu/partner-us/available-technologies/toroidal-propeller)
+Compare sound at equal thrust and thrust at equal electrical power. Acoustic measurements are future work. [MIT Lincoln Laboratory](https://www.ll.mit.edu/partner-us/available-technologies/toroidal-propeller)
 describes reduced acoustic signature, not validation of this aircraft.
 
 Real hardware agreement needs measured mass/CG, inertia bounds, motor/propeller
@@ -283,7 +293,7 @@ API41451. The latter is the visual benchmark, not the custom rescue world.
 Custom3D scene: sculpted coastal plateau/ridgeline, CC0 scanned cliffs/shore/trees,
 buildings/pad, textured clothed prone/standing humans, inert mines and litter.
 Downloads preserve checksums/provenance. No proprietary Call of Duty asset is
-used. The custom art still needs polish. Distance LODs reduce distant geometry
+used. Distance LODs reduce distant geometry
 while preserving near meshes; measure their performance rather than assume it.
 
 start-airsim.ps1 -Scenic uses external physics/teleportation: spectator preview,
@@ -302,7 +312,7 @@ Ryzen5 7535HS,16 GB RAM, RTX2050 4 GB. The remote RTX5060 computer is not in sco
 powershell -ExecutionPolicy Bypass -File start-skyforge.ps1
 ```
 
-Station: http://127.0.0.1:8768. After normal completion it stays for review;
+Station: http://127.0.0.1:8768. After normal completion it stays for review. Use STOP-SKYFORGE.bat before restarting;
 Ctrl+C closes owned services. --exit-on-complete is for unattended campaigns.
 The launcher declares a 20 Wh mission allowance, within the reference battery's
 59.2 Wh usable capacity. `-EnergyWh 15` repeats the tighter stress case that
@@ -323,11 +333,9 @@ fade, and the observation register shows model confidence, age and classificatio
 uncertainty. Planned route and flown trail remain separate. Decisions and reasons
 come from the actual deterministic agents. Stale snapshots and timing failures
 are explicit. These views are local diagnostic taps, not sub-1 KB radio packets.
-UI publication is limited to 5 Hz while flight/trace processing retains its
-50 Hz loop target. Design references: [QGroundControl flight view](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/ui_overview.html)
+UI publication is limited to 5 Hz; the reflex targets 100 Hz and inference acquisition runs at 8 Hz. Design references: [QGroundControl flight view](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/ui_overview.html)
 and [USWDS visualization guidance](https://designsystem.digital.gov/components/data-visualizations/).
-JavaScript syntax and a real-snapshot DOM/canvas smoke check passed. Native UI
-automation is unavailable in this session, so visual browser inspection is pending.
+JavaScript syntax and real-snapshot canvas rendering were checked. The video records actual camera feeds plus a synchronized station-telemetry composition; it is separate from a browser screen capture.
 
 Preserved ROS2/Gazebo path, with matching Gazebo models:
 
@@ -349,6 +357,41 @@ flip, packet bit flip and replay. Empty buffers do not prove buffered replay.
 The evaluator checks virtual delivery geometry, swept static/hazard geometry
 and return; dynamic contacts and physical package release are not certified.
 Native traces stream JSONL for crash evidence.
+
+### Dashboard controls
+
+| Button | Operation |
+|---|---|
+| MISSION / ISLAND | Mission-area or whole-island view |
+| + / - or mouse wheel | Zoom |
+| COVERAGE | Toggle observed-ground shading; shaded unknown areas are not certified safe |
+| ROUTE | Toggle planned route and flown trail |
+| ZONES | Toggle hazard exclusion circles |
+| LABELS | Toggle persistent track IDs |
+| Map objective | Click the button, then a safe map point; requests an authenticated goal at 6 m |
+| 20 s radio blackout | Interrupt simulated radio; onboard autonomy continues and events buffer |
+| Packet bit flip | Corrupt a packet to exercise rejection |
+| Replay command | Replay a prior command to exercise sequence rejection |
+| State integrity | Inject a modeled state bit flip and observe the reflex hold |
+
+Click an observation row or track to highlight it. New objectives preempt rescue
+navigation while route safety and return reserve remain authoritative. Unsafe
+or infeasible objectives are rejected. The explanation and event journal show
+which decision was taken. Fault controls are for resilience demonstrations.
+
+### Another Windows computer
+
+Clone the repository, install Python 3.13 and an appropriate NVIDIA driver,
+then download the native scene ZIP from the repository release:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install_native_package.ps1 -Archive C:\path\to\skyforge-native-win64.zip
+powershell -ExecutionPolicy Bypass -File scripts/setup_native_runtime.ps1
+```
+
+The packaged scene does not require Unreal Editor. Double-click START-DEMO.bat
+after setup. For another run, press Ctrl+C in the old terminal and close its
+simulator first. Reset is permitted only when the drone is stationary and landed.
 
 ## 10. Reproduce setup and package
 
@@ -374,10 +417,9 @@ powershell -ExecutionPolicy Bypass -File scripts/package_native_airsim.ps1 -Skip
 Training uses isolated CUDA12.8 PyTorch; inference uses CUDA13 ONNX Runtime.
 Do not install competing CPU/GPU ONNX wheels in one env. The build cache moved
 to C through a D junction, freeing about2.48 GiB on D. Do not alter it during
-builds. Docker's disk was removed at user request and is not silently recreated.
+builds. Docker was restarted for the final deployment build; its release test report is retained.
 
-Dockerfile targets ROS2 Jazzy/Ubuntu24.04/Gazebo Harmonic. The image is unbuilt
-here; WSLROS2 is the previously run deployment. On Linux with sufficient space:
+Dockerfile targets ROS2 Jazzy/Ubuntu24.04/Gazebo Harmonic. The release image was built and passed 87 tests locally. On Linux:
 
 ```bash
 docker build -t skyforge:local .
@@ -427,9 +469,7 @@ Presentation order: brief/penalties; architecture/no LLM loop; live camera/route
 decision evidence; outage/corruption recovery; independent audit/timing/class
 metrics; physical model/assumptions; next verified innovation pair.
 
-Never present one correct delivery as three rescues, development validation as
-a blind real-photo score, or a pipeline above150 ms as compliant. Keep the
-working Gazebo fallback available if native acceptance fails.
+Use the recorded mission, declared test domain and timing boundaries when presenting the results.
 
 ## 13. Source map and research
 

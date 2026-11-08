@@ -42,7 +42,7 @@ def evaluate(directory):
             'returned_to_base':bool(last and last['phase']=='POSE' and math.dist(last['p'][:2],scene['mission']['base_enu_m'][:2])<.6),
             'all_three_rescued':len(valid)==3,'geometry':geometry,'simulator_contact_timestamps':contacts,
             'safe_mission_geometric_pass':bool(len(valid)==3 and geometry['landed_at_base'] and
-                sum(geometry['zone_entries'].values())==0 and geometry['static_collision_segments']==0)}
+                sum(geometry['zone_entries'].values())==0 and geometry['static_collision_segments']==0 and not contacts)}
 
 
 if __name__=='__main__':

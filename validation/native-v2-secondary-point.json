@@ -1,0 +1,78 @@
+{
+  "domain": "Unseen rendered test views in the same authored scene",
+  "iou_threshold": 0.5,
+  "counts": {
+    "injured_person": {
+      "tp": 30,
+      "fp": 1,
+      "fn": 5,
+      "precision": 0.967741935483871,
+      "recall": 0.8571428571428571
+    },
+    "hostile_unit": {
+      "tp": 24,
+      "fp": 2,
+      "fn": 2,
+      "precision": 0.9230769230769231,
+      "recall": 0.9230769230769231
+    }
+  },
+  "inference_p95_ms": 15.532855,
+  "images": 100,
+  "backend": "onnx",
+  "device": "cuda",
+  "dataset": "data\\native-final-v2-test",
+  "models": "artifacts\\native_prop_models",
+  "split": "test",
+  "kind": "secondary",
+  "confidence": 0.25,
+  "false_positive_examples": [
+    {
+      "image": "images/test-0063.jpg",
+      "prediction": {
+        "class": "hostile_unit",
+        "confidence": 0.35284489393234253,
+        "bbox_xyxy": [
+          495.7873229980469,
+          232.64218139648438,
+          511.6584167480469,
+          263.2275695800781
+        ],
+        "source": "secondary"
+      },
+      "best_same_class_iou": 0
+    },
+    {
+      "image": "images/test-0077.jpg",
+      "prediction": {
+        "class": "injured_person",
+        "confidence": 0.32026636600494385,
+        "bbox_xyxy": [
+          286.16851806640625,
+          325.1285400390625,
+          422.92864990234375,
+          384.0
+        ],
+        "source": "secondary"
+      },
+      "best_same_class_iou": 0.3986565966345776
+    },
+    {
+      "image": "images/test-0080.jpg",
+      "prediction": {
+        "class": "hostile_unit",
+        "confidence": 0.38177865743637085,
+        "bbox_xyxy": [
+          107.85952758789062,
+          0.0,
+          134.682861328125,
+          27.96188735961914
+        ],
+        "source": "secondary"
+      },
+      "best_same_class_iou": 0
+    }
+  ],
+  "input_size": 512,
+  "primary_size": 512
+}

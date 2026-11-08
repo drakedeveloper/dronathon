@@ -52,7 +52,7 @@ for i,item in enumerate(manifest):
 for name,c in counts.items():
     c["precision"]=c["tp"]/max(1,c["tp"]+c["fp"]);c["recall"]=c["tp"]/max(1,c["tp"]+c["fn"])
 import numpy as np
-report={"domain":"rendered validation scenes, used for development tuning; fresh final test still required","iou_threshold":.5,"counts":dict(counts),"inference_p95_ms":float(np.percentile(durations,95)),"images":len(durations)}
+report={"domain":('Unseen rendered test views in the same authored scene' if args.split=='test' else 'Rendered development validation'),"iou_threshold":.5,"counts":dict(counts),"inference_p95_ms":float(np.percentile(durations,95)),"images":len(durations)}
 report['backend']=args.backend
 report['device']=args.device
 report['dataset']=str(args.dataset);report['models']=str(args.models);report['split']=args.split

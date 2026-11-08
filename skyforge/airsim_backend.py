@@ -69,16 +69,16 @@ class AirSimBackend:
         if not self.commands.call('armDisarm',True,self.vehicle):raise RuntimeError('Simulator refused arming')
         self.control_enabled=True
 
-    def velocity(self,enu_velocity,duration=.04,yaw_rate_deg_s=0.):
+    def velocity(self,enu_velocity,duration=.04,yaw_rate_deg_s=0.,on_sent=None):
         values=np.asarray(enu_velocity,float)
         if values.shape!=(3,) or not np.all(np.isfinite(values)) or np.linalg.norm(values)>2.:
             raise ValueError('Velocity outside bounded simulation envelope')
-        if not .02<=duration<=.25 or not math.isfinite(yaw_rate_deg_s) or abs(yaw_rate_deg_s)>45:
+        if not .01<=duration<=.25 or not math.isfinite(yaw_rate_deg_s) or abs(yaw_rate_deg_s)>45:
             raise ValueError('Invalid command duration/yaw rate')
         if not self.control_enabled:raise RuntimeError('Explicit control enable required')
         ned=NED_TO_ENU.T@values
-        return self.commands.call('moveByVelocity',*map(float,ned),float(duration),0,
-            {'is_rate':True,'yaw_or_rate':float(-yaw_rate_deg_s)},self.vehicle)
+        arguments=(*map(float,ned),float(duration),0,{'is_rate':True,'yaw_or_rate':float(-yaw_rate_deg_s)},self.vehicle)
+        return self.commands.call('moveByVelocity',*arguments,**({'on_sent':on_sent} if on_sent else {}))
 
     def images(self,requests):
         # Cosys 3.5 exposes two arguments; classic AirSim also requires the

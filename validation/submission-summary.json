@@ -1,0 +1,478 @@
+{
+  "mission": {
+    "mission_id": "native-676ca0dd",
+    "scope": "Independent geometric audit of virtual hover delivery; no physical release proof",
+    "virtual_delivery_events": 3,
+    "unique_geometrically_valid_deliveries": 3,
+    "deliveries": [
+      {
+        "t": 31.764,
+        "position_enu_m": [
+          -6.975859642028809,
+          -5.056807994842529,
+          2.150503225326538
+        ],
+        "nearest_casualty": "injured_person_0",
+        "horizontal_error_m": 0.06172442920761682,
+        "geometrically_valid": true
+      },
+      {
+        "t": 71.365,
+        "position_enu_m": [
+          8.93417739868164,
+          -2.987391948699951,
+          2.1508384418487547
+        ],
+        "nearest_casualty": "injured_person_1",
+        "horizontal_error_m": 0.06701923456665518,
+        "geometrically_valid": true
+      },
+      {
+        "t": 109.58,
+        "position_enu_m": [
+          2.9965381622314453,
+          8.977310180664062,
+          2.1481980752944945
+        ],
+        "nearest_casualty": "injured_person_2",
+        "horizontal_error_m": 0.022952390338116746,
+        "geometrically_valid": true
+      }
+    ],
+    "last_sample": {
+      "t": 159.70240688323975,
+      "absolute_t": 1794122512.6566136,
+      "p": [
+        -12.069945678114891,
+        -9.032453160732985,
+        0.19192174792289735
+      ],
+      "energy": 9.095589424087283,
+      "phase": "POSE",
+      "collision": {
+        "has_collided": false,
+        "penetration_depth": 0.0,
+        "time_stamp": 0,
+        "normal": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "impact_point": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "position": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "object_name": "",
+        "object_id": -1
+      }
+    },
+    "returned_to_base": true,
+    "all_three_rescued": true,
+    "geometry": {
+      "samples": 27217,
+      "duration_sim_s": 159.70240688323975,
+      "path_length_m": 112.16380167952587,
+      "zone_entries": {
+        "mine_0": 0,
+        "mine_1": 0,
+        "weapon_0": 0,
+        "hostile_unit_0": 0
+      },
+      "zone_occupied_seconds_upper_estimate": 0.0,
+      "minimum_hazard_center_distance_m": {
+        "mine_0": 4.257813072320711,
+        "mine_1": 3.7329235240331684,
+        "weapon_0": 5.617299823398229,
+        "hostile_unit_0": 4.26825040845571
+      },
+      "static_collision_segments": 0,
+      "landed_at_base": true,
+      "final_energy_wh": 9.095589424087283,
+      "scope": "Swept trace against declared static geometry and hazard cylinders; dynamic contacts and physical payload delivery not certified."
+    },
+    "simulator_contact_timestamps": [],
+    "safe_mission_geometric_pass": true
+  },
+  "timing": {
+    "pipeline_p95_ms": 164.265875,
+    "command_dispatch_p95_ms": 143.477175,
+    "command_acceptance_p95_ms": 132.51799999999992,
+    "ai_p95_ms": 10.503179999999993,
+    "vision_p95_ms": 23.93739499999999,
+    "control": {
+      "t": 1794122512.6566136,
+      "p": [
+        -12.069945678114891,
+        -9.032453160732985,
+        0.19192174792289735
+      ],
+      "v": [
+        -1.493976810706954e-06,
+        1.1074698704760522e-06,
+        0.0006881773006170988
+      ],
+      "q": [
+        -4.257928692288098e-11,
+        -1.5184433341958814e-10,
+        0.7069255093307981,
+        0.707288006583875
+      ],
+      "reason": "OK",
+      "p95_ms": 0.8806350000000001,
+      "range_m": 30.0,
+      "points": [
+        [
+          -12.42,
+          -20.5
+        ],
+        [
+          -13.13,
+          -20.47
+        ],
+        [
+          -13.85,
+          -20.47
+        ],
+        [
+          -14.58,
+          -20.47
+        ],
+        [
+          -15.33,
+          -20.47
+        ],
+        [
+          -16.11,
+          -20.47
+        ],
+        [
+          -16.93,
+          -20.47
+        ],
+        [
+          -19.42,
+          -22.46
+        ],
+        [
+          -19.42,
+          -20.7
+        ],
+        [
+          -20.31,
+          -20.47
+        ],
+        [
+          -21.44,
+          -20.47
+        ],
+        [
+          -22.69,
+          -20.47
+        ],
+        [
+          -24.09,
+          -20.47
+        ],
+        [
+          -3.43,
+          -1.17
+        ],
+        [
+          -3.43,
+          -2.08
+        ],
+        [
+          -3.43,
+          -2.91
+        ],
+        [
+          -3.1,
+          -3.46
+        ],
+        [
+          -1.74,
+          -3.46
+        ],
+        [
+          -3.11,
+          -5.53
+        ],
+        [
+          -3.11,
+          -6.15
+        ],
+        [
+          -2.41,
+          -6.56
+        ],
+        [
+          -6.22,
+          -20.46
+        ],
+        [
+          -7.07,
+          -20.47
+        ],
+        [
+          -7.89,
+          -20.47
+        ],
+        [
+          -8.67,
+          -20.47
+        ],
+        [
+          -9.42,
+          -20.47
+        ],
+        [
+          -10.15,
+          -20.47
+        ]
+      ],
+      "crc_hold_cycles": 0,
+      "overrides": 410,
+      "pose_errors": 0,
+      "lidar_errors": 0,
+      "completed_frame_ns": 25117915436400,
+      "completed_latency_ms": 123.1077,
+      "dispatched_frame_ns": 25117915436400,
+      "dispatched_latency_ms": 102.25,
+      "accepted_frame_ns": 25117915436400,
+      "accepted_latency_ms": 90.3925,
+      "bad_packets": 0,
+      "armed": true,
+      "collision": {
+        "has_collided": false,
+        "penetration_depth": 0.0,
+        "time_stamp": 0,
+        "normal": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "impact_point": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "position": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "object_name": "",
+        "object_id": -1
+      }
+    }
+  },
+  "faults": {
+    "mission_id": "native-2b341f92",
+    "scope": "Live simulated faults; mission outcome is audited separately",
+    "autonomy_advanced": true,
+    "outage_observed": true,
+    "events_buffered_and_replayed": true,
+    "state_crc_hold_observed": true,
+    "packet_corruption_rejected": true,
+    "replay_rejected": true,
+    "injected": [
+      "bitflip_packet",
+      "replay",
+      "state_bitflip"
+    ]
+  },
+  "tests": {
+    "windows": 87,
+    "container": 87
+  },
+  "recording": {
+    "mission_id": "native-676ca0dd",
+    "duration_s": 168.4,
+    "fps": 5,
+    "pitch_speed_multiplier": 1.8711111111111112,
+    "scope": "Actual simulator camera feeds and synchronized station telemetry composition, not a browser screen capture"
+  },
+  "performance": {
+    "mission_id": "native-6d2a6299",
+    "pipeline_p95_ms": 153.50268,
+    "command_dispatch_p95_ms": 131.93058,
+    "ai_p95_ms": 7.410299999999999,
+    "vision_p95_ms": 27.11091,
+    "control": {
+      "t": 1794122810.7466774,
+      "p": [
+        -12.081953093409538,
+        -9.052767291665077,
+        0.1927131336927414
+      ],
+      "v": [
+        1.4052051255930564e-07,
+        2.68598569164169e-07,
+        0.000661325640976429
+      ],
+      "q": [
+        0.0,
+        0.0,
+        0.7068625312301761,
+        0.7073509468028358
+      ],
+      "reason": "OK",
+      "p95_ms": 0.8316749999999999,
+      "range_m": 30.0,
+      "points": [
+        [
+          -12.42,
+          -20.45
+        ],
+        [
+          -13.13,
+          -20.45
+        ],
+        [
+          -13.85,
+          -20.45
+        ],
+        [
+          -14.58,
+          -20.45
+        ],
+        [
+          -15.33,
+          -20.45
+        ],
+        [
+          -16.11,
+          -20.45
+        ],
+        [
+          -16.92,
+          -20.45
+        ],
+        [
+          -19.41,
+          -22.43
+        ],
+        [
+          -19.41,
+          -20.67
+        ],
+        [
+          -20.3,
+          -20.45
+        ],
+        [
+          -21.43,
+          -20.45
+        ],
+        [
+          -22.67,
+          -20.45
+        ],
+        [
+          -24.07,
+          -20.46
+        ],
+        [
+          -3.42,
+          -1.16
+        ],
+        [
+          -3.42,
+          -2.07
+        ],
+        [
+          -3.42,
+          -2.9
+        ],
+        [
+          -3.06,
+          -3.44
+        ],
+        [
+          -1.7,
+          -3.44
+        ],
+        [
+          -3.52,
+          -5.57
+        ],
+        [
+          -3.52,
+          -6.16
+        ],
+        [
+          -2.8,
+          -6.54
+        ],
+        [
+          -6.05,
+          -20.44
+        ],
+        [
+          -6.92,
+          -20.44
+        ],
+        [
+          -7.74,
+          -20.44
+        ],
+        [
+          -8.52,
+          -20.44
+        ],
+        [
+          -9.28,
+          -20.45
+        ],
+        [
+          -10.01,
+          -20.45
+        ],
+        [
+          -10.41,
+          -23.33
+        ]
+      ],
+      "crc_hold_cycles": 0,
+      "overrides": 298,
+      "pose_errors": 0,
+      "lidar_errors": 0,
+      "completed_frame_ns": 25416607128600,
+      "completed_latency_ms": 114.9634,
+      "dispatched_frame_ns": 25416607128600,
+      "dispatched_latency_ms": 94.0653,
+      "accepted_frame_ns": 25416607128600,
+      "accepted_latency_ms": 81.0237,
+      "bad_packets": 0,
+      "armed": true,
+      "collision": {
+        "has_collided": false,
+        "penetration_depth": 0.0,
+        "time_stamp": 0,
+        "normal": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "impact_point": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "position": {
+          "x_val": 0.0,
+          "y_val": 0.0,
+          "z_val": 0.0
+        },
+        "object_name": "",
+        "object_id": -1
+      }
+    }
+  }
+}

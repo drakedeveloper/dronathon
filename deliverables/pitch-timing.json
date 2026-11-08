@@ -1,0 +1,104 @@
+[
+  {
+    "slide": 1,
+    "title": "SKYFORGE",
+    "seconds": 15,
+    "backup": false
+  },
+  {
+    "slide": 2,
+    "title": "The mission",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 3,
+    "title": "Two agents. Independent flight protection.",
+    "seconds": 55,
+    "backup": false
+  },
+  {
+    "slide": 4,
+    "title": "INIT \u2192 autonomous mission",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 5,
+    "title": "D\u00c9TECTER / from pixels to mapped objects",
+    "seconds": 55,
+    "backup": false
+  },
+  {
+    "slide": 6,
+    "title": "TRIAGE / urgency before proximity",
+    "seconds": 45,
+    "backup": false
+  },
+  {
+    "slide": 7,
+    "title": "NAVIGUER / checked routes and local reflex",
+    "seconds": 55,
+    "backup": false
+  },
+  {
+    "slide": 8,
+    "title": "Physics / an auditable X500 reference",
+    "seconds": 55,
+    "backup": false
+  },
+  {
+    "slide": 9,
+    "title": "LIVRER \u2192 RETOUR BASE",
+    "seconds": 30,
+    "backup": false
+  },
+  {
+    "slide": 10,
+    "title": "Recorded autonomous mission",
+    "seconds": 90,
+    "backup": false
+  },
+  {
+    "slide": 11,
+    "title": "Resilience / autonomy survives the outage",
+    "seconds": 55,
+    "backup": false
+  },
+  {
+    "slide": 12,
+    "title": "Measured mission results",
+    "seconds": 45,
+    "backup": false
+  },
+  {
+    "slide": 13,
+    "title": "Applications and operating model",
+    "seconds": 25,
+    "backup": false
+  },
+  {
+    "slide": 14,
+    "title": "SKYFORGE",
+    "seconds": 15,
+    "backup": false
+  },
+  {
+    "slide": 15,
+    "title": "Backup / vision evaluation",
+    "seconds": 0,
+    "backup": true
+  },
+  {
+    "slide": 16,
+    "title": "Backup / separate real-image work",
+    "seconds": 0,
+    "backup": true
+  },
+  {
+    "slide": 17,
+    "title": "Backup / dashboard controls",
+    "seconds": 0,
+    "backup": true
+  }
+]

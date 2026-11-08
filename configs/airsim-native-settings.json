@@ -26,7 +26,7 @@
           "X": 0, "Y": 0, "Z": 0.12, "Pitch": -90, "Roll": 0, "Yaw": 0,
           "CaptureSettings": [
             {"ImageType": 0, "Width": 512, "Height": 384, "FOV_Degrees": 68.75494, "MotionBlurAmount": 0},
-            {"ImageType": 1, "Width": 256, "Height": 192, "FOV_Degrees": 68.75494},
+            {"ImageType": 1, "Width": 128, "Height": 96, "FOV_Degrees": 68.75494},
             {"ImageType": 5, "Width": 512, "Height": 384, "FOV_Degrees": 68.75494, "MotionBlurAmount": 0}
           ]
         }

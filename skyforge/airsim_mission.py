@@ -17,8 +17,8 @@ import uuid
 import cv2
 import numpy as np
 from .scene import ROOT
-from .airsim_backend import AirSimBackend
-from .airsim_scenario import scenario_wind
+from .airsim_backend import AirSimBackend,binary_data
+from .airsim_scenario import scenario_wind,scenario_fog
 from .neural_vision import NeuralVisionSystem
 from .physics import Vehicle,Battery
 from .planning import MissionAI
@@ -49,11 +49,12 @@ class NativeMission:
         self.mission_inputs=json.loads((ROOT/'configs/scenes/coastal-rescue.json').read_text())['mission']
         self.vehicle=Vehicle.from_reference(ROOT/'configs/airframes/x500-research.json')
         self.battery=Battery(config.get('mission_energy_allowance_wh',self.mission_inputs['mission_energy_allowance_wh']))
-        self.ai=MissionAI({'reserve_wh':1.,'survey_altitude_m':self.mission_inputs['survey_altitude_m'],'vehicle':self.vehicle})
+        self.ai=MissionAI({'reserve_wh':1.,'survey_altitude_m':self.mission_inputs['survey_altitude_m'],'vehicle':self.vehicle,'person_confidence':config.get('person_confidence',.35)})
         self.backend=AirSimBackend(port=config['api_port'],translation_enu=config.get('translation_enu',[0,0,0]))
-        self.vision=NeuralVisionSystem(Path(config.get('models_dir',ROOT/'models/native')),device=config.get('vision_device','cpu'),size=config.get('vision_size',512))
+        self.vision=NeuralVisionSystem(Path(config.get('models_dir',ROOT/'models/native')),device=config.get('vision_device','cpu'),size=config.get('vision_size',512),person_confidence=config.get('person_confidence',.35))
         self.id='native-'+uuid.uuid4().hex[:8];self.session=uuid.uuid4().hex[:10];self.control_seq=0
         self.directory=ROOT/'artifacts/native_missions'/self.id;self.directory.mkdir(parents=True,exist_ok=True)
+        (self.directory/'config.json').write_text(json.dumps(config,indent=2))
         self.radio=RadioClient(self.id,self.directory/'radio',port=config['radio_port'])
         self.codec=Codec(load_key(config['control_key']))
         self.socket=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -64,6 +65,7 @@ class NativeMission:
         self.vision_ms=deque(maxlen=1000);self.ai_ms=deque(maxlen=1500);self.pipeline_ms=deque(maxlen=1500)
         self.ack_frame=0;self.stats={};self.stats_received=0.;self.lock=threading.Lock()
         self.accepted_frame=0;self.acceptance_ms=deque(maxlen=1500)
+        self.dispatched_frame=0;self.dispatch_ms=deque(maxlen=6000)
         self.pose_history=deque(maxlen=100);self.pose_lock=threading.Lock()
         self.events=[];self.trace=[];self.served=set();self.supply_count=3;self.delivery_dwell={}
         self.coverage=CoverageGrid(bounds=tuple(self.mission_inputs['bounds']));self.reported=set()
@@ -87,10 +89,32 @@ class NativeMission:
                 elapsed=(time.perf_counter_ns()-begin)/1e6
                 with self.lock:self.frame=frame;self.batch=batch;self.camera_received=time.monotonic();self.vision_ms.append(elapsed)
             except (OSError,ValueError,RuntimeError):self.camera_errors+=1
-            time.sleep(max(0,.06-(time.monotonic()-start)))
+            time.sleep(max(0,self.config.get('vision_period_s',.125)-(time.monotonic()-start)))
 
     def emit(self,kind,data,t):
         self.events.append({'type':kind,**clean(data)});self.radio.event(kind,data,t)
+
+    def observer(self):
+        """One-Hz forward view is diagnostic only; it never feeds the agents."""
+        tap=AirSimBackend(port=self.config['api_port'])
+        try:
+            # A body-relative chase camera shows the actual simulated drone.
+            forward=np.array([5.,5.,3.]);forward/=np.linalg.norm(forward)
+            right=np.cross([0.,0.,1.],forward);right/=np.linalg.norm(right)
+            down=np.cross(forward,right);axis,_=cv2.Rodrigues(np.column_stack([forward,right,down]))
+            angle=float(np.linalg.norm(axis));q=np.r_[axis.ravel()/angle*math.sin(angle/2),math.cos(angle/2)]
+            tap.commands.call('simSetCameraPose','front_center',{'position':{'x_val':-5.,'y_val':-5.,'z_val':-3.},
+                'orientation':dict(zip(('x_val','y_val','z_val','w_val'),map(float,q)))},'SKYFORGE')
+            while self.running:
+                start=time.monotonic()
+                try:
+                    reply=tap.images([{'camera_name':'front_center','image_type':0,'pixels_as_float':False,'compress':True}])[0]
+                    image=cv2.imdecode(np.frombuffer(binary_data(reply['image_data_uint8']),np.uint8),cv2.IMREAD_COLOR)
+                    if image is not None:
+                        temporary=self.live/'observer.tmp.jpg';cv2.imwrite(str(temporary),image,[cv2.IMWRITE_JPEG_QUALITY,85]);replace_live(temporary,self.live/'observer.jpg')
+                except (OSError,ValueError,RuntimeError):pass
+                time.sleep(max(0,1-(time.monotonic()-start)))
+        finally:tap.close()
 
     def poses(self):
         with self.pose_lock:return list(self.pose_history)
@@ -113,10 +137,15 @@ class NativeMission:
                 identity=data.get('accepted_frame_ns',0);latency=data.get('accepted_latency_ms')
                 if identity and identity!=self.accepted_frame and isinstance(latency,(float,int)) and 0<=latency<10000:
                     self.accepted_frame=identity;self.acceptance_ms.append(latency)
+                identity=data.get('dispatched_frame_ns',0);latency=data.get('dispatched_latency_ms')
+                if identity and identity!=self.dispatched_frame and isinstance(latency,(float,int)) and 0<=latency<10000:
+                    self.dispatched_frame=identity;self.dispatch_ms.append(latency)
             except (ValueError,KeyError,TypeError):continue
 
     def run(self):
         camera_thread=threading.Thread(target=self.cameras,daemon=True);camera_thread.start()
+        observer_thread=threading.Thread(target=self.observer,daemon=True) if self.config.get('record_observer') else None
+        if observer_thread:observer_thread.start()
         start_sim=None;last_sim=None;last_ai_frame=None;decision=None;snapshot_seq=0
         try:
             wall_start=time.monotonic()
@@ -192,7 +221,7 @@ class NativeMission:
                     tracks=list(self.ai.perception.tracks.values())
                     zones=[[*track['position'][:2],1.8] for track in tracks if track['class'] in ('mine','weapon','hostile_unit') or track.get('classification_uncertain')]
                     usable=max(0.,pos[2]*math.tan(.6)*.75-2.35-.55)
-                    speed=min(.9,max(0.,math.sqrt(.45**2+3*usable)-.45))
+                    speed=min(.9*(1-.5*scenario_fog(weather_t)),max(0.,math.sqrt(.45**2+3*usable)-.45))
                     data={'p':target.round(3).tolist(),'phase':decision['phase'],'valid_until':int((absolute+.65)*1000),
                         'zones':zones[:8],'available_wh':round(self.battery.remaining_wh,3),'hold':len(route)<=1 or (stale and decision['phase'] not in ('RETOUR_BASE','POSE')),
                         'speed_limit':round(speed,3),'frame_request_wall_ns':frame['request_wall_ns']}
@@ -224,12 +253,15 @@ class NativeMission:
                             self.emit('mission_checkpoint',{'p':status['p'],'energy':status['energy'],'phase':status['phase'],'served':status['served']},t);self.last_checkpoint=t
                         diagnostic={**status,'mission_id':self.id,'backend':'native_airsim','decision':decision['decision_code'],
                             'explanation':explain_decision(decision),'wind_speed':float(np.linalg.norm(wind)),
+                            'fog_strength':scenario_fog(weather_t),
                             'ai_p95_ms':float(np.percentile(self.ai_ms,95)) if self.ai_ms else 0.,
                             'vision_p95_ms':float(np.percentile(vision_times,95)) if vision_times else 0.,
                             'pipeline_p95_ms':float(np.percentile(self.pipeline_ms,95)) if self.pipeline_ms else None,
                             'pipeline_scope':'camera request to completed velocity RPC; conservative completion upper bound',
                             'command_acceptance_p95_ms':float(np.percentile(self.acceptance_ms,95)) if self.acceptance_ms else None,
                             'command_acceptance_scope':'camera request to authenticated first receipt in reflex mailbox; excludes velocity RPC completion',
+                            'command_dispatch_p95_ms':float(np.percentile(self.dispatch_ms,95)) if self.dispatch_ms else None,
+                            'command_dispatch_scope':'camera request to completed socket.sendall of first velocity command for that frame; software output boundary, excludes simulator command execution',
                             'control':self.stats,'security':dict(self.radio.counters),'route':route,'obstacles':observed,
                             'coverage':self.coverage.summary(),'coverage_cells':self.coverage_cells,'camera_errors':self.camera_errors,
                             'tracks':[{**track,'served':track['id'] in self.ai.planner.served} for track in tracks],
@@ -243,11 +275,13 @@ class NativeMission:
                         self.emit('mission_landed',{'deliveries':len(self.served),'at_base':near_base and not self.emergency},t)
                         time.sleep(1);break
                 if t>self.config.get('max_mission_seconds',360):self.emit('mission_timeout',{},t);break
-                time.sleep(max(0,.02-(time.monotonic()-begin)))
+                time.sleep(max(0,.005-(time.monotonic()-begin)))
         finally:
             self.running=False;camera_thread.join(timeout=4)
+            if observer_thread:observer_thread.join(timeout=4)
             (self.directory/'trace.json').write_text(json.dumps(clean(self.trace)))
             (self.directory/'observed-ground.json').write_text(json.dumps({**self.coverage.summary(),'cells':self.coverage.cells()}))
+            (self.directory/'observed-tracks.json').write_text(json.dumps(clean(list(self.ai.perception.tracks.values()))))
             self.trace_log.close();self.log.close();self.backend.close();self.radio.close();self.socket.close()
 
 

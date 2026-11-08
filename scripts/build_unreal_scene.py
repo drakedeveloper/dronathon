@@ -109,6 +109,7 @@ terrain=import_asset(generated/'cinematic_island_v2.obj',mesh=True,scale=100)
 person=import_asset(generated/'rescue_person_proxy.obj',mesh=True,scale=100)
 roof=import_asset(generated/'hangar_roof.obj',mesh=True,scale=100)
 palm=import_asset(generated/'coastal_palm.obj',mesh=True,scale=100)
+inert_prop=import_asset(generated/'inert_field_prop_v1.obj',mesh=True,scale=100)
 people_root=ROOT/'sim/assets/rescue_people'
 clothed_prone=import_asset(people_root/'injured_person_clothed.obj',mesh=True,scale=100)
 clothed_standing=import_asset(people_root/'casual_shirt_standing.obj',mesh=True,scale=100)
@@ -235,8 +236,10 @@ for entity in scene['simulator_and_evaluator_only']['entities']:
             entity_actors.append(spawn(name+' inert casing detail '+str(detail),cylinder,
                 [p[0]+.18*math.cos(angle),p[1]+.18*math.sin(angle),.126],(.024,.024,.015),mat=mat['steel']))
     else:
-        entity_actors=[box(name,[p[0],p[1],.08],[.68,.12,.10],mat['dark'],yaw=17),
-                       box(name+' passive grip',[p[0]-.1,p[1]-.12,.08],[.12,.24,.10],mat['dark'],yaw=17)]
+        entity_actors=[spawn(name,inert_prop,[p[0],p[1],.04],yaw=17)]
+        for slot,entry in enumerate(inert_prop.get_editor_property('static_materials')):
+            key='steel' if 'metal' in str(entry.material_slot_name) else 'dark'
+            entity_actors[0].static_mesh_component.set_material(slot,mat[key])
     labels.append({**entity,'actor_names':[a.get_name() for a in entity_actors]})
 
 # Mobile loading mast: physically collidable but not a hostile or weapon.

@@ -1,0 +1,21 @@
+{
+  "implementation": "Official Ultralytics box validation, 101-point AP; no training",
+  "domain": "Unseen views in the same authored scene; not unseen-world or real-photo generalization",
+  "weights_sha256": "203de16bcda5b6737402e1b8226474df982030e393f4c61362ad18930f4aeb46",
+  "manifest_sha256": "973fd432cc1702246e6e45f2e1c478c8706eb1e772806605324fc78e1791af7b",
+  "split": "test",
+  "dataset": "data\\native-final-test",
+  "kind": "secondary",
+  "map50": 0.9075023258387372,
+  "map50_95": 0.6053159746212936,
+  "classes": {
+    "injured_person": {
+      "ap50": 0.9512534246141202,
+      "ap50_95": 0.6427983973782568
+    },
+    "hostile_unit": {
+      "ap50": 0.8637512270633543,
+      "ap50_95": 0.5678335518643304
+    }
+  }
+}

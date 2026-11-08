@@ -99,7 +99,7 @@ def rank_casualties(candidates):
 
 
 class PerceptionAgent:
-    def __init__(self):self.tracks={};self.next_id=1;self.last_frame=-1
+    def __init__(self,person_confidence=.35):self.tracks={};self.next_id=1;self.last_frame=-1;self.person_confidence=person_confidence
 
     def update(self,snapshot):
         frame=snapshot.get("frame");batch=snapshot.get("detections")
@@ -110,7 +110,7 @@ class PerceptionAgent:
             # Confidence scales differ between the pixel baseline and YOLO.
             # Low-confidence hazards enlarge the map conservatively; casualty
             # selection still requires repeated spatially consistent sightings.
-            minimum=.35
+            minimum=self.person_confidence if detection['class'] in ('injured_person','hostile_unit') else .35
             if detection["confidence"]<minimum:continue
             p=localize(detection,frame)
             if p is None or not np.all(np.isfinite(p)) or p[2]>2.5:continue
@@ -214,10 +214,12 @@ class PlannerAgent:
             # while the return-reserve interrupt above remains authoritative.
             revision=snapshot['goal_revision'];goal=np.asarray(snapshot['goal_update']['position'],float)
             path=astar(pos,goal,circles,altitude=self.altitude)
+            if path and np.linalg.norm(pos[:2]-goal[:2])<.6:
+                path=[pos.tolist(),goal.tolist()]
             inbound=astar(goal,base,circles,altitude=self.altitude)
             required=math.inf
             if path and inbound:
-                if abs(goal[2]-self.altitude)>.1:path.append(goal.tolist())
+                if abs(goal[2]-self.altitude)>.1 and path[-1]!=goal.tolist():path.append(goal.tolist())
                 required=(self.energy_for_route(path,wind)[0]+self.energy_for_route(inbound,wind,landing=True)[0])*1.2+reserve
             detail.update(requested_goal_revision=revision,goal_required_energy_wh=required)
             self.phase='NAVIGUER';code='GROUND_STATION_REROUTE'
@@ -320,7 +322,7 @@ class MissionAI:
     def __init__(self,config):
         from langgraph.graph import StateGraph,START,END
         from typing import TypedDict
-        self.perception=PerceptionAgent();self.planner=PlannerAgent(config)
+        self.perception=PerceptionAgent(config.get('person_confidence',.35));self.planner=PlannerAgent(config)
         class State(TypedDict):
             snapshot:dict
             tracks:dict

@@ -1,0 +1,100 @@
+{
+  "mission_id": "native-6d2a6299",
+  "scope": "Independent geometric audit of virtual hover delivery; no physical release proof",
+  "virtual_delivery_events": 3,
+  "unique_geometrically_valid_deliveries": 3,
+  "deliveries": [
+    {
+      "t": 35.76,
+      "position_enu_m": [
+        -6.950778484344482,
+        -5.049236059188843,
+        2.221261210441589
+      ],
+      "nearest_casualty": "injured_person_0",
+      "horizontal_error_m": 0.06962001959116064,
+      "geometrically_valid": true
+    },
+    {
+      "t": 74.911,
+      "position_enu_m": [
+        8.957170486450195,
+        -2.9820852279663086,
+        2.1511835527420042
+      ],
+      "nearest_casualty": "injured_person_1",
+      "horizontal_error_m": 0.046425276390475424,
+      "geometrically_valid": true
+    },
+    {
+      "t": 113.417,
+      "position_enu_m": [
+        2.950326919555664,
+        9.002473831176758,
+        2.151809639930725
+      ],
+      "nearest_casualty": "injured_person_2",
+      "horizontal_error_m": 0.049734643474348625,
+      "geometrically_valid": true
+    }
+  ],
+  "last_sample": {
+    "t": 163.71349239349365,
+    "absolute_t": 1794122810.7466774,
+    "p": [
+      -12.081953093409538,
+      -9.052767291665077,
+      0.1927131336927414
+    ],
+    "energy": 8.82463188131826,
+    "phase": "POSE",
+    "collision": {
+      "has_collided": false,
+      "penetration_depth": 0.0,
+      "time_stamp": 0,
+      "normal": {
+        "x_val": 0.0,
+        "y_val": 0.0,
+        "z_val": 0.0
+      },
+      "impact_point": {
+        "x_val": 0.0,
+        "y_val": 0.0,
+        "z_val": 0.0
+      },
+      "position": {
+        "x_val": 0.0,
+        "y_val": 0.0,
+        "z_val": 0.0
+      },
+      "object_name": "",
+      "object_id": -1
+    }
+  },
+  "returned_to_base": true,
+  "all_three_rescued": true,
+  "geometry": {
+    "samples": 29104,
+    "duration_sim_s": 163.71349239349365,
+    "path_length_m": 113.24139052543231,
+    "zone_entries": {
+      "mine_0": 0,
+      "mine_1": 0,
+      "weapon_0": 0,
+      "hostile_unit_0": 0
+    },
+    "zone_occupied_seconds_upper_estimate": 0.0,
+    "minimum_hazard_center_distance_m": {
+      "mine_0": 4.22951189976377,
+      "mine_1": 3.821918939928867,
+      "weapon_0": 5.6296581934197985,
+      "hostile_unit_0": 4.20508597288606
+    },
+    "static_collision_segments": 0,
+    "landed_at_base": true,
+    "final_energy_wh": 8.82463188131826,
+    "scope": "Swept trace against declared static geometry and hazard cylinders; dynamic contacts and physical payload delivery not certified."
+  },
+  "simulator_contact_timestamps": [],
+  "safe_mission_geometric_pass": true
+}

@@ -1,6 +1,6 @@
 {
-  "windows_tests": 79,
-  "linux_tests": 64,
+  "windows_tests": 87,
+  "linux_tests": 87,
   "status": "passed",
   "coverage": [
     "physics",
@@ -19,5 +19,6 @@
     "No fresh blind vision test",
     "No complete capture-to-motor deadline proof"
   ],
-  "checkpoint": "2026-11-08; Linux checkpoint predates latest native-only/UI changes"
+  "checkpoint": "Final release source checkpoint",
+  "linux_environment": "Built ROS2 Jazzy/Gazebo Docker release image"
 }

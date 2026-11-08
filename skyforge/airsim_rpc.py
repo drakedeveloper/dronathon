@@ -21,16 +21,18 @@ class AirSimRPC:
         if self.socket:
             self.socket.close();self.socket=None
 
-    def call(self,method,*args):
+    def call(self,method,*args,on_sent=None):
         with self.lock:
             try:
                 if self.socket is None:
                     self.socket=socket.create_connection(self.address,self.timeout)
+                    self.socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
                     self.socket.settimeout(self.timeout)
                     self.unpacker=msgpack.Unpacker(raw=False,unicode_errors='surrogateescape',max_buffer_size=32*1024*1024,strict_map_key=False)
                 self.sequence+=1;identity=self.sequence
                 deadline=time.monotonic()+self.timeout
                 self.socket.sendall(msgpack.packb([0,identity,method,list(args)],use_bin_type=True))
+                if on_sent is not None:on_sent(time.monotonic_ns())
                 while True:
                     for reply in self.unpacker:
                         if not isinstance(reply,list) or len(reply)!=4 or reply[0]!=1 or reply[1]!=identity:

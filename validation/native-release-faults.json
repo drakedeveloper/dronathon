@@ -1,0 +1,15 @@
+{
+  "mission_id": "native-2b341f92",
+  "scope": "Live simulated faults; mission outcome is audited separately",
+  "autonomy_advanced": true,
+  "outage_observed": true,
+  "events_buffered_and_replayed": true,
+  "state_crc_hold_observed": true,
+  "packet_corruption_rejected": true,
+  "replay_rejected": true,
+  "injected": [
+    "bitflip_packet",
+    "replay",
+    "state_bitflip"
+  ]
+}

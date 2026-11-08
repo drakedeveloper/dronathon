@@ -18,3 +18,13 @@ sim/assets/coast_sand_rocks_02
 sim/assets/aerial_grass_rock
 sim/assets/rescue_people
 *.partial
+deliverables
+Gun_detection.ipynb
+notebook751329eaee.ipynb
+waste_code.ipynb
+gun_best.pt
+waste_seg_best.pt
+yolo11n.pt
+39bd966f-17a3-414f-b5ba-f3bfadab54c7.jpg
+cf9d2047-4e13-4252-b0ba-7317d16a1f3d.jpg
+e846daec-091d-457b-a8de-7a98c4f588f7.jpg

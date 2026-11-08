@@ -1,12 +1,12 @@
 {
-  "status": "Native three-delivery geometric acceptance passed; real-image and held-out vision evaluation pending",
+  "status": "Three-delivery scene mission independently audited; frozen unseen-view evaluation recorded",
   "domain": "authored Unreal development scene",
   "preprocessing": "RGB float32 NCHW 0..1 letterbox 512, optional half-scale secondary at altitude below4m",
   "models": [
     {
       "name": "primary",
       "file": "primary.onnx",
-      "sha256": "dd47d503c5c0ca1819555e5a75c07dacd3c54af8bb67c465c3c874f91358ed23",
+      "sha256": "2a2b856b437ad55ce0ea34ce69da853551e587cd6b31b04c3e392e7fc72f43da",
       "classes": [
         "waste",
         "mine",
@@ -45,8 +45,10 @@
       ]
     }
   ],
-  "acceptance_mission": "native-32c7c474",
+  "acceptance_mission": "native-676ca0dd",
   "minimum_confidence": 0.35,
   "mission_energy_allowance_wh": 20,
-  "precision": "float32"
+  "precision": "float32",
+  "person_confidence": 0.25,
+  "vision_period_s": 0.125
 }

@@ -35,3 +35,18 @@ def test_half_precision_export_receives_half_tensor_without_changing_box_mapping
         result=model.infer(np.zeros((384,512,3),np.uint8),{'frame_id':1,'t_sim_ns':0},secondary_zoom_out=True)
         np.testing.assert_allclose(result['detections'][0]['bbox_xyxy'],[206,92,306,292])
     finally:model.pool.shutdown()
+
+
+def test_recall_threshold_applies_only_to_people_not_primary_hazards():
+    class LowPerson(Session):
+        def run(self,*_):return [np.array([[[256.],[256.],[50.],[100.],[.3],[.1]]],dtype=np.float32)]
+    class LowPrimary(Session):
+        def run(self,*_):return [np.array([[[256.],[256.],[50.],[100.],[.1],[.3],[.1]]],dtype=np.float32)]
+    model=object.__new__(NeuralVisionSystem);model.size=512
+    model.sizes={'primary':512,'secondary':512}
+    model.models=[('primary',['waste','mine','weapon'],LowPrimary()),('secondary',['injured_person','hostile_unit'],LowPerson())]
+    model.pool=ThreadPoolExecutor(max_workers=2);model.confidence=.35;model.person_confidence=.25
+    try:
+        result=model.infer(np.zeros((384,512,3),np.uint8),{'frame_id':1,'t_sim_ns':0})
+        assert [d['class'] for d in result['detections']]==['injured_person']
+    finally:model.pool.shutdown()
