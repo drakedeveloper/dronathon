@@ -1,9 +1,14 @@
-param([int]$Width = 1280, [int]$Height = 720,[switch]$Offscreen,[switch]$Packaged,[switch]$Realtime)
+param([int]$Width = 1280, [int]$Height = 720,[switch]$Offscreen,[switch]$Packaged,[switch]$Realtime,[ValidateSet('Default','Balanced')][string]$VisualQuality='Default')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $engine = 'D:\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor.exe'
 $project = Join-Path $root 'runtime\unreal\SKYFORGE\SKYFORGE.uproject'
 $settings = Join-Path $root 'configs\airsim-native-settings.json'
+$quality=$null
+if ($VisualQuality -eq 'Balanced') {
+    $quality=Get-Content -LiteralPath (Join-Path $root 'configs\render-balanced-4gb.json') -Raw | ConvertFrom-Json
+    $Width=$quality.width; $Height=$quality.height
+}
 if ($Realtime) {
     $profile=Get-Content -LiteralPath $settings -Raw | ConvertFrom-Json
     $profile.ViewMode='NoDisplay'
@@ -16,7 +21,10 @@ if (!$Packaged -and (!(Test-Path -LiteralPath $engine) -or !(Test-Path -LiteralP
     throw 'Build the native Unreal project before launching it.'
 }
 $existing = Get-NetTCPConnection -LocalPort 41461 -State Listen -ErrorAction SilentlyContinue
-if ($existing) { Write-Output "Native AirSim already listening on 41461 (PID $($existing.OwningProcess))"; exit 0 }
+if ($existing) {
+    if ($VisualQuality -ne 'Default') { throw 'Stop the current demo with STOP-SKYFORGE.bat before selecting a different visual profile.' }
+    Write-Output "Native AirSim already listening on 41461 (PID $($existing.OwningProcess))"; exit 0
+}
 # Close only the known project-owned scenic preview to free its GPU memory.
 if (!$Offscreen) { Get-CimInstance Win32_Process -Filter "Name = 'Coastline.exe'" | ForEach-Object {
     if ($_.ExecutablePath -and $_.ExecutablePath.StartsWith((Join-Path $root 'runtime\airsim\Coastline\'), [StringComparison]::OrdinalIgnoreCase)) {
@@ -31,6 +39,10 @@ if ($Packaged) {
     $arguments=@('/Game/SKYFORGE/CoastalRescue','-windowed',"-ResX=$Width","-ResY=$Height",'-dx11','-nosplash',('-settings="'+$settings+'"'),('-abslog="'+$log+'"'))
 }
 # This is the interactive simulator the user explicitly requested to see.
+if ($quality) {
+    $arguments += ('-ExecCmds="'+($quality.console_commands -join ',')+'"')
+    Write-Output "Balanced visuals: ${Width}x${Height}, 60 FPS cap, 1400 MB texture pool."
+}
 if ($Offscreen) {
     $arguments += '-RenderOffscreen'
     $process = Start-Process -FilePath $engine -ArgumentList $arguments -WorkingDirectory $root -WindowStyle Hidden -PassThru

@@ -1,0 +1,29 @@
+{
+  "name": "Balanced visuals for RTX 2050 4 GB",
+  "width": 1600,
+  "height": 900,
+  "render_fps": 60,
+  "scope": "Optional visible demo. Flight logic, physics and sensor capture dimensions are unchanged. Rendering may affect detector appearance and timing.",
+  "console_commands": [
+    "r.ScreenPercentage 100",
+    "r.PostProcessAAQuality 4",
+    "r.Tonemapper.Sharpen 0.4",
+    "r.MaxAnisotropy 8",
+    "r.Streaming.PoolSize 1400",
+    "r.Streaming.LimitPoolSizeToVRAM 1",
+    "r.ShadowQuality 3",
+    "r.Shadow.MaxResolution 1024",
+    "r.Shadow.CSM.MaxCascades 2",
+    "r.Shadow.DistanceScale 1",
+    "r.AmbientOcclusionLevels 1",
+    "r.BloomQuality 3",
+    "r.SSR.Quality 0",
+    "r.MotionBlurQuality 0",
+    "r.DepthOfFieldQuality 0",
+    "t.MaxFPS 60"
+  ],
+  "references": [
+    "https://dev.epicgames.com/documentation/en-us/unreal-engine/texture-streaming-configuration-in-unreal-engine",
+    "https://dev.epicgames.com/documentation/en-us/unreal-engine/scalability-reference-for-unreal-engine"
+  ]
+}

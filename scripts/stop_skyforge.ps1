@@ -1,36 +1,33 @@
+﻿# This stop action is for the local simulator only, never a real vehicle.
 $ErrorActionPreference='Stop'
-$root=Split-Path -Parent $PSScriptRoot
+$root=[IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 Set-Location -LiteralPath $root
 $python=Join-Path $env:LOCALAPPDATA 'SKYFORGE\venv-native\Scripts\python.exe'
-$owned=Get-CimInstance Win32_Process | Where-Object {
-    $_.Name -eq 'python.exe' -and $_.CommandLine -and
-    $_.CommandLine.Contains($python) -and $_.CommandLine -match '-m scripts.run_native_mission'
+$packageRoot=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'SKYFORGE\Packaged\'))
+$project=Join-Path $root 'runtime\unreal\SKYFORGE\SKYFORGE.uproject'
+$modules='-m\s+(scripts\.run_native_mission|station\.server|skyforge\.airsim_(mission|controller|scenario))(\s|$)'
+$all=Get-CimInstance Win32_Process
+$owned=$all | Where-Object {
+    ($_.Name -eq 'python.exe' -and $_.ExecutablePath -and $_.ExecutablePath.Equals($python,[StringComparison]::OrdinalIgnoreCase) -and $_.CommandLine -match $modules) -or
+    ($_.Name -eq 'SKYFORGE.exe' -and $_.ExecutablePath -and $_.ExecutablePath.StartsWith($packageRoot,[StringComparison]::OrdinalIgnoreCase)) -or
+    ($_.Name -eq 'UnrealEditor.exe' -and $_.CommandLine -and $_.CommandLine.Contains($project))
 }
-$parents=$owned | Where-Object {$_.ParentProcessId -notin $owned.ProcessId}
-$listener=Get-NetTCPConnection -LocalPort 41461 -State Listen -ErrorAction SilentlyContinue
-if ($listener) {
-    $process=Get-CimInstance Win32_Process -Filter "ProcessId=$($listener.OwningProcess)"
-    $packageRoot=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'SKYFORGE\Packaged\'))
-    if (!$process.ExecutablePath -or !$process.ExecutablePath.StartsWith($packageRoot,[StringComparison]::OrdinalIgnoreCase)) { throw 'Unexpected simulator owner; stop it manually' }
-    foreach ($parent in $parents) {
-        Set-Content -LiteralPath (Join-Path $root 'artifacts\native\stop-request.txt') -Value ([string]$parent.ProcessId) -Encoding ascii
+foreach ($process in $owned) {
+    if (Get-Process -Id $process.ProcessId -ErrorAction SilentlyContinue) {
+        # A parent tree termination may already have removed this child.
+        $savedPreference=$ErrorActionPreference
+        $ErrorActionPreference='SilentlyContinue'
+        & taskkill /PID $process.ProcessId /T /F 2>$null | Out-Null
+        $ErrorActionPreference=$savedPreference
     }
-    Write-Output 'Stopping SKYFORGE: waiting for verified landing before closing AirSim. Keep this window open.'
-    & $python -c "import time,numpy as np; from skyforge.airsim_rpc import AirSimRPC
-deadline=time.monotonic()+180
-with AirSimRPC(port=41461) as r:
- while time.monotonic()<deadline:
-  s=r.call('getMultirotorState','SKYFORGE')
-  if s['landed_state']==0 and np.linalg.norm(list(s['kinematics_estimated']['linear_velocity'].values()))<.2:break
-  time.sleep(.5)
- else:raise SystemExit('Landing has not completed. AirSim was left running; check the dashboard before retrying.')
-print('Landing confirmed.')"
-    if ($LASTEXITCODE -ne 0) { throw 'AirSim remains open because landing could not be confirmed.' }
-    # Allow the owner to finish its recovery/disarm sequence before closing RPC.
-    foreach ($parent in $parents) { Wait-Process -Id $parent.ProcessId -Timeout 10 -ErrorAction SilentlyContinue }
-    Stop-Process -Id $process.ProcessId
 }
-foreach ($process in $parents) {
-    if (Get-Process -Id $process.ProcessId -ErrorAction SilentlyContinue) { & taskkill /PID $process.ProcessId /T /F | Out-Null }
-}
-Write-Output 'Stopped the grounded SKYFORGE simulator and mission services.'
+# Closing the local simulator deliberately aborts the run; no landing RPC required.
+$deadline=(Get-Date).AddSeconds(8)
+do {
+    $remaining=@($owned | Where-Object { Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue })
+    if ($remaining.Count -eq 0) { break }
+    Start-Sleep -Milliseconds 200
+} while ((Get-Date) -lt $deadline)
+if ($remaining.Count -gt 0) { throw 'A SKYFORGE process could not be closed. Close its window and retry.' }
+Write-Output 'SKYFORGE demo closed. Ready for a fresh start.'
+$global:LASTEXITCODE=0
